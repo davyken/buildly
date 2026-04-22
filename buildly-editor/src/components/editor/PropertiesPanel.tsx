@@ -6,13 +6,13 @@ import { SECTION_VARIANTS } from '../../lib/sectionDefaults';
 import { ColorPicker } from '../ui';
 import type { SectionType } from '../../types';
 
-const Section: React.FC<{ title: string; children: React.ReactNode; defaultOpen?: boolean }> = ({ title, children, defaultOpen = true }) => {
+// ── Small reusable pieces ─────────────────────────────────────────────────────
+const Accordion: React.FC<{ title: string; children: React.ReactNode; defaultOpen?: boolean }> = ({ title, children, defaultOpen = true }) => {
   const [open, setOpen] = useState(defaultOpen);
   return (
     <div className="border-b border-border">
       <button onClick={() => setOpen(s => !s)} className="flex items-center justify-between w-full px-4 py-2.5 text-xs font-semibold text-muted hover:text-text-dim uppercase tracking-wider transition-colors">
-        {title}
-        {open ? <ChevronUp size={11} /> : <ChevronDown size={11} />}
+        {title} {open ? <ChevronUp size={11} /> : <ChevronDown size={11} />}
       </button>
       {open && <div className="px-4 pb-4 space-y-3">{children}</div>}
     </div>
@@ -26,21 +26,22 @@ const Field: React.FC<{ label: string; children: React.ReactNode }> = ({ label, 
   </div>
 );
 
-const TextInput: React.FC<{ value: string; onChange: (v: string) => void; placeholder?: string; multiline?: boolean }> = ({ value, onChange, placeholder, multiline }) => (
-  multiline
-    ? <textarea value={value} onChange={e => onChange(e.target.value)} placeholder={placeholder} rows={3}
-        className="w-full bg-surface border border-border rounded-lg px-2.5 py-1.5 text-xs text-text outline-none focus:border-accent/60 resize-none" />
-    : <input type="text" value={value} onChange={e => onChange(e.target.value)} placeholder={placeholder}
-        className="w-full bg-surface border border-border rounded-lg px-2.5 py-1.5 text-xs text-text outline-none focus:border-accent/60" />
+const TI: React.FC<{ value: string; onChange: (v: string) => void; placeholder?: string; multiline?: boolean; type?: string }> = ({
+  value, onChange, placeholder, multiline, type = 'text',
+}) => multiline ? (
+  <textarea value={value} onChange={e => onChange(e.target.value)} placeholder={placeholder} rows={3}
+    className="w-full bg-surface border border-border rounded-lg px-2.5 py-1.5 text-xs text-text outline-none focus:border-accent/60 resize-none" />
+) : (
+  <input type={type} value={value} onChange={e => onChange(e.target.value)} placeholder={placeholder}
+    className="w-full bg-surface border border-border rounded-lg px-2.5 py-1.5 text-xs text-text outline-none focus:border-accent/60" />
 );
 
-export const PropertiesPanel: React.FC = () => {
-  const {
-    selectedSection,
-    updateSectionContent, updateSectionStyle, updateSectionItem,
-    addSectionItem, removeSectionItem, changeVariant,
-  } = useSiteStore();
+// Link helper — what valid link values look like
+const LINK_HINT = 'e.g. #about  /contact  https://...';
 
+// ── Main Panel ────────────────────────────────────────────────────────────────
+export const PropertiesPanel: React.FC = () => {
+  const { selectedSection, updateSectionContent, updateSectionStyle, updateSectionItem, addSectionItem, removeSectionItem, changeVariant } = useSiteStore();
   const section = selectedSection();
 
   if (!section) {
@@ -54,7 +55,7 @@ export const PropertiesPanel: React.FC = () => {
           <div className="w-10 h-10 rounded-xl border border-dashed border-border flex items-center justify-center">
             <Settings2 size={18} className="text-muted" />
           </div>
-          <p className="text-xs text-muted leading-relaxed">Click a section on the canvas to edit it.</p>
+          <p className="text-xs text-muted leading-relaxed">Click a section on the canvas to edit its properties.</p>
         </div>
       </aside>
     );
@@ -64,8 +65,6 @@ export const PropertiesPanel: React.FC = () => {
   const s = section.styles;
   const upC = (k: string, v: string) => updateSectionContent(section.id, k, v);
   const upS = (k: string, v: string) => updateSectionStyle(section.id, k, v);
-
-  // Variant switcher
   const variants = SECTION_VARIANTS[section.type]?.variants || [];
 
   return (
@@ -77,38 +76,71 @@ export const PropertiesPanel: React.FC = () => {
 
       <div className="flex-1 overflow-y-auto">
 
-        {/* Design Variant Switcher */}
+        {/* Variant switcher */}
         {variants.length > 1 && (
-          <Section title="Design Variant">
+          <Accordion title="Design Variant">
             <div className="flex flex-col gap-2">
               {variants.map(v => (
                 <button key={v.id} onClick={() => changeVariant(section.id, section.type as SectionType, v.id)}
-                  className={clsx('flex items-center gap-2 px-3 py-2 rounded-lg border text-xs font-medium transition-all text-left', section.variant === v.id ? 'border-accent text-accent bg-accent/10' : 'border-border text-muted hover:border-zinc-600 hover:text-text-dim')}>
-                  <div className={clsx('w-2 h-2 rounded-full', section.variant === v.id ? 'bg-accent' : 'bg-border')} />
+                  className={clsx('flex items-center gap-2 px-3 py-2 rounded-lg border text-xs font-medium transition-all text-left',
+                    section.variant === v.id ? 'border-accent text-accent bg-accent/10' : 'border-border text-muted hover:border-zinc-600 hover:text-text-dim')}>
+                  <div className={clsx('w-2 h-2 rounded-full flex-shrink-0', section.variant === v.id ? 'bg-accent' : 'bg-border')} />
                   {v.label}
                 </button>
               ))}
             </div>
-          </Section>
+          </Accordion>
         )}
 
-        {/* Colors */}
-        <Section title="Colors">
-          <ColorPicker label="Background" value={s.bg} onChange={v => upS('bg', v)} />
-          <ColorPicker label="Text" value={s.textColor} onChange={v => upS('textColor', v)} />
-          <ColorPicker label="Heading" value={s.headingColor || s.textColor} onChange={v => upS('headingColor', v)} />
-          <ColorPicker label="Accent" value={s.accentColor} onChange={v => upS('accentColor', v)} />
-          <ColorPicker label="Muted" value={s.mutedColor || '#6b7280'} onChange={v => upS('mutedColor', v)} />
-          <ColorPicker label="Card BG" value={s.cardBg || '#f9fafb'} onChange={v => upS('cardBg', v)} />
-          <ColorPicker label="Border" value={s.borderColor || '#e5e7eb'} onChange={v => upS('borderColor', v)} />
-        </Section>
+        {/* ── COLORS ── */}
+        <Accordion title="Colors & Background">
+          <ColorPicker label="Background Color" value={s.bg} onChange={v => upS('bg', v)} />
+          <Field label="Background Image URL">
+            <TI value={s.backgroundImage || ''} onChange={v => upS('backgroundImage', v)} placeholder="https://images.unsplash.com/..." />
+            {s.backgroundImage && (
+              <div className="mt-1.5 rounded-lg overflow-hidden h-14 border border-border">
+                <img src={s.backgroundImage} alt="" className="w-full h-full object-cover" />
+              </div>
+            )}
+          </Field>
+          {s.backgroundImage && (
+            <>
+              <Field label="Image Overlay Color">
+                <TI value={s.backgroundOverlay || 'rgba(0,0,0,0.4)'} onChange={v => upS('backgroundOverlay', v)} placeholder="rgba(0,0,0,0.4)" />
+                <p className="text-xs text-muted mt-1">Use rgba(r,g,b,opacity) — e.g. rgba(0,0,0,0.5)</p>
+              </Field>
+              <Field label="Image Size">
+                <select value={s.backgroundSize || 'cover'} onChange={e => upS('backgroundSize', e.target.value)}
+                  className="w-full bg-surface border border-border rounded-lg px-2.5 py-1.5 text-xs text-text outline-none">
+                  <option value="cover">Cover (fill section)</option>
+                  <option value="contain">Contain (fit inside)</option>
+                  <option value="auto">Auto</option>
+                </select>
+              </Field>
+              <Field label="Image Position">
+                <select value={s.backgroundPosition || 'center'} onChange={e => upS('backgroundPosition', e.target.value)}
+                  className="w-full bg-surface border border-border rounded-lg px-2.5 py-1.5 text-xs text-text outline-none">
+                  {['center','top','bottom','left','right','top left','top right','bottom left','bottom right'].map(p => (
+                    <option key={p} value={p}>{p}</option>
+                  ))}
+                </select>
+              </Field>
+            </>
+          )}
+          <ColorPicker label="Text Color" value={s.textColor} onChange={v => upS('textColor', v)} />
+          <ColorPicker label="Heading Color" value={s.headingColor || s.textColor} onChange={v => upS('headingColor', v)} />
+          <ColorPicker label="Accent Color" value={s.accentColor} onChange={v => upS('accentColor', v)} />
+          <ColorPicker label="Muted / Subtitle" value={s.mutedColor || '#6b7280'} onChange={v => upS('mutedColor', v)} />
+          <ColorPicker label="Card Background" value={s.cardBg || '#f9fafb'} onChange={v => upS('cardBg', v)} />
+          <ColorPicker label="Border Color" value={s.borderColor || '#e5e7eb'} onChange={v => upS('borderColor', v)} />
+        </Accordion>
 
-        {/* NAVBAR content */}
+        {/* ── NAVBAR ── */}
         {section.type === 'navbar' && (
-          <Section title="Navigation">
-            <Field label="Brand Name"><TextInput value={c.brand || ''} onChange={v => upC('brand', v)} placeholder="MyBrand" /></Field>
-            <Field label="CTA Button Text"><TextInput value={c.ctaText || ''} onChange={v => upC('ctaText', v)} placeholder="Get Started" /></Field>
-            <Field label="CTA Link"><TextInput value={c.ctaLink || ''} onChange={v => upC('ctaLink', v)} placeholder="#contact" /></Field>
+          <Accordion title="Navigation">
+            <Field label="Brand Name"><TI value={c.brand || ''} onChange={v => upC('brand', v)} placeholder="MyBrand" /></Field>
+            <Field label="CTA Button Text"><TI value={c.ctaText || ''} onChange={v => upC('ctaText', v)} placeholder="Get Started" /></Field>
+            <Field label="CTA Link"><TI value={c.ctaLink || ''} onChange={v => upC('ctaLink', v)} placeholder="#contact" /></Field>
             <div>
               <label className="text-xs text-muted uppercase tracking-wider font-medium block mb-2">Nav Links</label>
               {(section.navLinks || []).map((link, i) => (
@@ -116,119 +148,186 @@ export const PropertiesPanel: React.FC = () => {
                   <input value={link.label} onChange={e => { const nl = [...(section.navLinks||[])]; nl[i] = {...nl[i], label: e.target.value}; useSiteStore.getState().updateSection(section.id, { navLinks: nl }); }}
                     className="flex-1 bg-surface border border-border rounded px-2 py-1 text-xs text-text outline-none" placeholder="Label" />
                   <input value={link.href} onChange={e => { const nl = [...(section.navLinks||[])]; nl[i] = {...nl[i], href: e.target.value}; useSiteStore.getState().updateSection(section.id, { navLinks: nl }); }}
-                    className="flex-1 bg-surface border border-border rounded px-2 py-1 text-xs text-text outline-none" placeholder="href" />
+                    className="flex-1 bg-surface border border-border rounded px-2 py-1 text-xs text-text outline-none" placeholder="#section or /page" />
                   <button onClick={() => { const nl = (section.navLinks||[]).filter((_, j) => j !== i); useSiteStore.getState().updateSection(section.id, { navLinks: nl }); }}
                     className="text-red-400 hover:text-red-300 px-1"><Trash2 size={11} /></button>
                 </div>
               ))}
-              <button onClick={() => useSiteStore.getState().updateSection(section.id, { navLinks: [...(section.navLinks||[]), { label: 'Link', href: '#' }] })}
-                className="flex items-center gap-1 text-xs text-accent hover:text-accent-dim mt-1"><Plus size={11} /> Add link</button>
+              <button onClick={() => useSiteStore.getState().updateSection(section.id, { navLinks: [...(section.navLinks||[]), { label: 'New Link', href: '#' }] })}
+                className="flex items-center gap-1 text-xs text-accent hover:text-accent-dim mt-1"><Plus size={11} /> Add nav link</button>
             </div>
-          </Section>
+          </Accordion>
         )}
 
-        {/* HERO content */}
+        {/* ── HERO ── */}
         {section.type === 'hero' && (
-          <Section title="Content">
-            <Field label="Badge/Tag"><TextInput value={c.badge || ''} onChange={v => upC('badge', v)} placeholder="Welcome" /></Field>
-            <Field label="Heading"><TextInput value={c.heading || ''} onChange={v => upC('heading', v)} multiline /></Field>
-            <Field label="Subheading"><TextInput value={c.subheading || ''} onChange={v => upC('subheading', v)} multiline /></Field>
-            <Field label="Button 1 Text"><TextInput value={c.ctaText || ''} onChange={v => upC('ctaText', v)} /></Field>
-            <Field label="Button 1 Link"><TextInput value={c.ctaLink || ''} onChange={v => upC('ctaLink', v)} /></Field>
-            <Field label="Button 2 Text"><TextInput value={c.cta2Text || ''} onChange={v => upC('cta2Text', v)} /></Field>
-            <Field label="Button 2 Link"><TextInput value={c.cta2Link || ''} onChange={v => upC('cta2Link', v)} /></Field>
-            <Field label="Image URL"><TextInput value={c.image || ''} onChange={v => upC('image', v)} placeholder="https://..." /></Field>
-            {section.variant === 4 && <Field label="Overlay Opacity (0–1)"><TextInput value={c.overlayOpacity || '0.5'} onChange={v => upC('overlayOpacity', v)} /></Field>}
-          </Section>
+          <Accordion title="Content & Links">
+            <Field label="Badge / Tag"><TI value={c.badge || ''} onChange={v => upC('badge', v)} placeholder="✦ Welcome" /></Field>
+            <Field label="Heading"><TI value={c.heading || ''} onChange={v => upC('heading', v)} multiline /></Field>
+            <Field label="Subheading"><TI value={c.subheading || ''} onChange={v => upC('subheading', v)} multiline /></Field>
+            <div className="border-t border-border pt-3 mt-1">
+              <p className="text-xs font-semibold text-text-dim mb-2 uppercase tracking-wider">Button 1</p>
+              <Field label="Button Text"><TI value={c.ctaText || ''} onChange={v => upC('ctaText', v)} placeholder="Get Started" /></Field>
+              <Field label="Button Link">
+                <TI value={c.ctaLink || ''} onChange={v => upC('ctaLink', v)} placeholder={LINK_HINT} />
+              </Field>
+            </div>
+            <div className="border-t border-border pt-3">
+              <p className="text-xs font-semibold text-text-dim mb-2 uppercase tracking-wider">Button 2</p>
+              <Field label="Button Text"><TI value={c.cta2Text || ''} onChange={v => upC('cta2Text', v)} placeholder="Learn More" /></Field>
+              <Field label="Button Link"><TI value={c.cta2Link || ''} onChange={v => upC('cta2Link', v)} placeholder={LINK_HINT} /></Field>
+            </div>
+            <div className="border-t border-border pt-3">
+              <p className="text-xs font-semibold text-text-dim mb-2 uppercase tracking-wider">Image</p>
+              <Field label="Image URL"><TI value={c.image || ''} onChange={v => upC('image', v)} placeholder="https://..." /></Field>
+              {section.variant === 4 && <Field label="Overlay Opacity (0–1)"><TI value={c.overlayOpacity || '0.5'} onChange={v => upC('overlayOpacity', v)} /></Field>}
+            </div>
+          </Accordion>
         )}
 
-        {/* ABOUT content */}
+        {/* ── ABOUT ── */}
         {section.type === 'about' && (
-          <Section title="Content">
-            <Field label="Badge"><TextInput value={c.badge || ''} onChange={v => upC('badge', v)} /></Field>
-            <Field label="Heading"><TextInput value={c.heading || ''} onChange={v => upC('heading', v)} multiline /></Field>
-            <Field label="Body Text"><TextInput value={c.body || ''} onChange={v => upC('body', v)} multiline /></Field>
-            <Field label="Bullet 1"><TextInput value={c.point1 || ''} onChange={v => upC('point1', v)} /></Field>
-            <Field label="Bullet 2"><TextInput value={c.point2 || ''} onChange={v => upC('point2', v)} /></Field>
-            <Field label="Bullet 3"><TextInput value={c.point3 || ''} onChange={v => upC('point3', v)} /></Field>
-            <Field label="CTA Text"><TextInput value={c.ctaText || ''} onChange={v => upC('ctaText', v)} /></Field>
-            <Field label="Image URL"><TextInput value={c.image || ''} onChange={v => upC('image', v)} placeholder="https://..." /></Field>
-            <Field label="Stat 1 Value"><TextInput value={c.stat1Value || ''} onChange={v => upC('stat1Value', v)} /></Field>
-            <Field label="Stat 1 Label"><TextInput value={c.stat1Label || ''} onChange={v => upC('stat1Label', v)} /></Field>
-            <Field label="Stat 2 Value"><TextInput value={c.stat2Value || ''} onChange={v => upC('stat2Value', v)} /></Field>
-            <Field label="Stat 2 Label"><TextInput value={c.stat2Label || ''} onChange={v => upC('stat2Label', v)} /></Field>
-            <Field label="Stat 3 Value"><TextInput value={c.stat3Value || ''} onChange={v => upC('stat3Value', v)} /></Field>
-            <Field label="Stat 3 Label"><TextInput value={c.stat3Label || ''} onChange={v => upC('stat3Label', v)} /></Field>
-          </Section>
+          <Accordion title="Content">
+            <Field label="Badge"><TI value={c.badge || ''} onChange={v => upC('badge', v)} /></Field>
+            <Field label="Heading"><TI value={c.heading || ''} onChange={v => upC('heading', v)} multiline /></Field>
+            <Field label="Body Text"><TI value={c.body || ''} onChange={v => upC('body', v)} multiline /></Field>
+            <Field label="Bullet 1"><TI value={c.point1 || ''} onChange={v => upC('point1', v)} /></Field>
+            <Field label="Bullet 2"><TI value={c.point2 || ''} onChange={v => upC('point2', v)} /></Field>
+            <Field label="Bullet 3"><TI value={c.point3 || ''} onChange={v => upC('point3', v)} /></Field>
+            <div className="border-t border-border pt-3">
+              <p className="text-xs font-semibold text-text-dim mb-2 uppercase tracking-wider">CTA Button</p>
+              <Field label="Button Text"><TI value={c.ctaText || ''} onChange={v => upC('ctaText', v)} /></Field>
+              <Field label="Button Link"><TI value={c.ctaLink || ''} onChange={v => upC('ctaLink', v)} placeholder={LINK_HINT} /></Field>
+            </div>
+            <div className="border-t border-border pt-3">
+              <p className="text-xs font-semibold text-text-dim mb-2 uppercase tracking-wider">Image</p>
+              <Field label="Image URL"><TI value={c.image || ''} onChange={v => upC('image', v)} placeholder="https://..." /></Field>
+            </div>
+            <div className="border-t border-border pt-3">
+              <p className="text-xs font-semibold text-text-dim mb-2 uppercase tracking-wider">Stats</p>
+              {[['stat1Value','Stat 1 Value'],['stat1Label','Stat 1 Label'],['stat2Value','Stat 2 Value'],['stat2Label','Stat 2 Label'],['stat3Value','Stat 3 Value'],['stat3Label','Stat 3 Label'],['stat4Value','Stat 4 Value'],['stat4Label','Stat 4 Label']].map(([k, l]) => (
+                <Field key={k} label={l}><TI value={c[k] || ''} onChange={v => upC(k, v)} /></Field>
+              ))}
+            </div>
+          </Accordion>
         )}
 
-        {/* SERVICES / TESTIMONIALS / FAQ items */}
-        {['services', 'testimonials', 'faq'].includes(section.type) && (
+        {/* ── SERVICES ── */}
+        {section.type === 'services' && (
           <>
-            <Section title="Heading">
-              <Field label="Badge"><TextInput value={c.badge || ''} onChange={v => upC('badge', v)} /></Field>
-              <Field label="Heading"><TextInput value={c.heading || ''} onChange={v => upC('heading', v)} multiline /></Field>
-              <Field label="Subheading"><TextInput value={c.subheading || ''} onChange={v => upC('subheading', v)} multiline /></Field>
-            </Section>
-            <Section title={section.type === 'faq' ? 'Questions' : section.type === 'testimonials' ? 'Reviews' : 'Services'}>
+            <Accordion title="Heading">
+              <Field label="Badge"><TI value={c.badge || ''} onChange={v => upC('badge', v)} /></Field>
+              <Field label="Heading"><TI value={c.heading || ''} onChange={v => upC('heading', v)} multiline /></Field>
+              <Field label="Subheading"><TI value={c.subheading || ''} onChange={v => upC('subheading', v)} multiline /></Field>
+            </Accordion>
+            <Accordion title="Services">
               {(section.items || []).map((item, i) => (
                 <div key={item.id} className="border border-border rounded-lg p-3 space-y-2">
                   <div className="flex items-center justify-between mb-1">
-                    <span className="text-xs font-semibold text-text-dim">#{i + 1}</span>
+                    <span className="text-xs font-semibold text-text-dim">Service #{i + 1}</span>
                     <button onClick={() => removeSectionItem(section.id, item.id)} className="text-red-400 hover:text-red-300"><Trash2 size={11} /></button>
                   </div>
-                  {section.type === 'services' && <>
-                    <TextInput value={item.icon || ''} onChange={v => updateSectionItem(section.id, item.id, { icon: v })} placeholder="Emoji icon" />
-                    <TextInput value={item.title || ''} onChange={v => updateSectionItem(section.id, item.id, { title: v })} placeholder="Title" />
-                    <TextInput value={item.description || ''} onChange={v => updateSectionItem(section.id, item.id, { description: v })} placeholder="Description" multiline />
-                  </>}
-                  {section.type === 'testimonials' && <>
-                    <TextInput value={item.quote || ''} onChange={v => updateSectionItem(section.id, item.id, { quote: v })} placeholder="Quote" multiline />
-                    <TextInput value={item.name || ''} onChange={v => updateSectionItem(section.id, item.id, { name: v })} placeholder="Name" />
-                    <TextInput value={item.role || ''} onChange={v => updateSectionItem(section.id, item.id, { role: v })} placeholder="Role, Company" />
-                    <TextInput value={item.image || ''} onChange={v => updateSectionItem(section.id, item.id, { image: v })} placeholder="Avatar URL" />
-                  </>}
-                  {section.type === 'faq' && <>
-                    <TextInput value={item.question || ''} onChange={v => updateSectionItem(section.id, item.id, { question: v })} placeholder="Question" />
-                    <TextInput value={item.answer || ''} onChange={v => updateSectionItem(section.id, item.id, { answer: v })} placeholder="Answer" multiline />
-                  </>}
+                  <TI value={item.icon || ''} onChange={v => updateSectionItem(section.id, item.id, { icon: v })} placeholder="Emoji icon e.g. 🎨" />
+                  <TI value={item.title || ''} onChange={v => updateSectionItem(section.id, item.id, { title: v })} placeholder="Service title" />
+                  <TI value={item.description || ''} onChange={v => updateSectionItem(section.id, item.id, { description: v })} placeholder="Description" multiline />
+                  <TI value={item.href || ''} onChange={v => updateSectionItem(section.id, item.id, { href: v })} placeholder={`Link (optional) — ${LINK_HINT}`} />
                 </div>
               ))}
               <button onClick={() => addSectionItem(section.id)} className="flex items-center gap-1 text-xs text-accent hover:text-accent-dim mt-1 font-medium">
-                <Plus size={11} /> Add item
+                <Plus size={11} /> Add service
               </button>
-            </Section>
+            </Accordion>
           </>
         )}
 
-        {/* CONTACT content */}
-        {section.type === 'contact' && (
-          <Section title="Contact Info">
-            <Field label="Badge"><TextInput value={c.badge || ''} onChange={v => upC('badge', v)} /></Field>
-            <Field label="Heading"><TextInput value={c.heading || ''} onChange={v => upC('heading', v)} multiline /></Field>
-            <Field label="Subheading"><TextInput value={c.subheading || ''} onChange={v => upC('subheading', v)} multiline /></Field>
-            <Field label="Email"><TextInput value={c.email || ''} onChange={v => upC('email', v)} /></Field>
-            <Field label="Phone"><TextInput value={c.phone || ''} onChange={v => upC('phone', v)} /></Field>
-            <Field label="Address"><TextInput value={c.address || ''} onChange={v => upC('address', v)} /></Field>
-            <Field label="WhatsApp Number"><TextInput value={c.whatsappPhone || ''} onChange={v => upC('whatsappPhone', v)} placeholder="237600000000" /></Field>
-            <Field label="WhatsApp Message"><TextInput value={c.whatsappMessage || ''} onChange={v => upC('whatsappMessage', v)} multiline /></Field>
-            <Field label="Form Recipient Email"><TextInput value={c.formRecipient || ''} onChange={v => upC('formRecipient', v)} /></Field>
-            <Field label="Submit Button Text"><TextInput value={c.submitLabel || ''} onChange={v => upC('submitLabel', v)} /></Field>
-            <Field label="Success Message"><TextInput value={c.successMessage || ''} onChange={v => upC('successMessage', v)} /></Field>
-          </Section>
+        {/* ── TESTIMONIALS ── */}
+        {section.type === 'testimonials' && (
+          <>
+            <Accordion title="Heading">
+              <Field label="Badge"><TI value={c.badge || ''} onChange={v => upC('badge', v)} /></Field>
+              <Field label="Heading"><TI value={c.heading || ''} onChange={v => upC('heading', v)} multiline /></Field>
+              <Field label="Subheading"><TI value={c.subheading || ''} onChange={v => upC('subheading', v)} multiline /></Field>
+            </Accordion>
+            <Accordion title="Testimonials">
+              {(section.items || []).map((item, i) => (
+                <div key={item.id} className="border border-border rounded-lg p-3 space-y-2">
+                  <div className="flex items-center justify-between mb-1">
+                    <span className="text-xs font-semibold text-text-dim">Review #{i + 1}</span>
+                    <button onClick={() => removeSectionItem(section.id, item.id)} className="text-red-400 hover:text-red-300"><Trash2 size={11} /></button>
+                  </div>
+                  <TI value={item.quote || ''} onChange={v => updateSectionItem(section.id, item.id, { quote: v })} placeholder="Quote text" multiline />
+                  <TI value={item.name || ''} onChange={v => updateSectionItem(section.id, item.id, { name: v })} placeholder="Name" />
+                  <TI value={item.role || ''} onChange={v => updateSectionItem(section.id, item.id, { role: v })} placeholder="Role, Company" />
+                  <TI value={item.image || ''} onChange={v => updateSectionItem(section.id, item.id, { image: v })} placeholder="Avatar image URL" />
+                </div>
+              ))}
+              <button onClick={() => addSectionItem(section.id)} className="flex items-center gap-1 text-xs text-accent hover:text-accent-dim mt-1 font-medium">
+                <Plus size={11} /> Add testimonial
+              </button>
+            </Accordion>
+          </>
         )}
 
-        {/* FOOTER content */}
+        {/* ── FAQ ── */}
+        {section.type === 'faq' && (
+          <>
+            <Accordion title="Heading">
+              <Field label="Badge"><TI value={c.badge || ''} onChange={v => upC('badge', v)} /></Field>
+              <Field label="Heading"><TI value={c.heading || ''} onChange={v => upC('heading', v)} multiline /></Field>
+              <Field label="Subheading"><TI value={c.subheading || ''} onChange={v => upC('subheading', v)} multiline /></Field>
+            </Accordion>
+            <Accordion title="Questions">
+              {(section.items || []).map((item, i) => (
+                <div key={item.id} className="border border-border rounded-lg p-3 space-y-2">
+                  <div className="flex items-center justify-between mb-1">
+                    <span className="text-xs font-semibold text-text-dim">Q#{i + 1}</span>
+                    <button onClick={() => removeSectionItem(section.id, item.id)} className="text-red-400 hover:text-red-300"><Trash2 size={11} /></button>
+                  </div>
+                  <TI value={item.question || ''} onChange={v => updateSectionItem(section.id, item.id, { question: v })} placeholder="Question" />
+                  <TI value={item.answer || ''} onChange={v => updateSectionItem(section.id, item.id, { answer: v })} placeholder="Answer" multiline />
+                </div>
+              ))}
+              <button onClick={() => addSectionItem(section.id)} className="flex items-center gap-1 text-xs text-accent hover:text-accent-dim mt-1 font-medium">
+                <Plus size={11} /> Add question
+              </button>
+            </Accordion>
+          </>
+        )}
+
+        {/* ── CONTACT ── */}
+        {section.type === 'contact' && (
+          <Accordion title="Contact Info">
+            <Field label="Badge"><TI value={c.badge || ''} onChange={v => upC('badge', v)} /></Field>
+            <Field label="Heading"><TI value={c.heading || ''} onChange={v => upC('heading', v)} multiline /></Field>
+            <Field label="Subheading"><TI value={c.subheading || ''} onChange={v => upC('subheading', v)} multiline /></Field>
+            <Field label="Email Address"><TI value={c.email || ''} onChange={v => upC('email', v)} type="email" /></Field>
+            <Field label="Phone Number"><TI value={c.phone || ''} onChange={v => upC('phone', v)} /></Field>
+            <Field label="Address"><TI value={c.address || ''} onChange={v => upC('address', v)} /></Field>
+            <div className="border-t border-border pt-3">
+              <p className="text-xs font-semibold text-text-dim mb-2 uppercase tracking-wider">WhatsApp</p>
+              <Field label="Phone (with country code)"><TI value={c.whatsappPhone || ''} onChange={v => upC('whatsappPhone', v)} placeholder="237600000000" /></Field>
+              <Field label="Pre-filled Message"><TI value={c.whatsappMessage || ''} onChange={v => upC('whatsappMessage', v)} multiline /></Field>
+            </div>
+            <div className="border-t border-border pt-3">
+              <p className="text-xs font-semibold text-text-dim mb-2 uppercase tracking-wider">Form</p>
+              <Field label="Send submissions to"><TI value={c.formRecipient || ''} onChange={v => upC('formRecipient', v)} type="email" /></Field>
+              <Field label="Submit button text"><TI value={c.submitLabel || ''} onChange={v => upC('submitLabel', v)} /></Field>
+              <Field label="Success message"><TI value={c.successMessage || ''} onChange={v => upC('successMessage', v)} /></Field>
+            </div>
+          </Accordion>
+        )}
+
+        {/* ── FOOTER ── */}
         {section.type === 'footer' && (
           <>
-            <Section title="Brand">
-              <Field label="Brand Name"><TextInput value={c.brand || ''} onChange={v => upC('brand', v)} /></Field>
-              <Field label="Tagline"><TextInput value={c.tagline || ''} onChange={v => upC('tagline', v)} multiline /></Field>
-              <Field label="Email"><TextInput value={c.email || ''} onChange={v => upC('email', v)} /></Field>
-              <Field label="Phone"><TextInput value={c.phone || ''} onChange={v => upC('phone', v)} /></Field>
-              <Field label="Copyright"><TextInput value={c.copyright || ''} onChange={v => upC('copyright', v)} /></Field>
-            </Section>
-            <Section title="Link Groups">
+            <Accordion title="Brand">
+              <Field label="Brand Name"><TI value={c.brand || ''} onChange={v => upC('brand', v)} /></Field>
+              <Field label="Tagline"><TI value={c.tagline || ''} onChange={v => upC('tagline', v)} multiline /></Field>
+              <Field label="Email"><TI value={c.email || ''} onChange={v => upC('email', v)} /></Field>
+              <Field label="Phone"><TI value={c.phone || ''} onChange={v => upC('phone', v)} /></Field>
+              <Field label="Copyright"><TI value={c.copyright || ''} onChange={v => upC('copyright', v)} /></Field>
+            </Accordion>
+            <Accordion title="Link Groups">
               {(section.items || []).map((group, i) => (
                 <div key={group.id} className="border border-border rounded-lg p-3 mb-2">
                   <div className="flex items-center justify-between mb-2">
@@ -241,7 +340,7 @@ export const PropertiesPanel: React.FC = () => {
                       <input value={link.label} onChange={e => { const it = JSON.parse(JSON.stringify(section.items||[])); it[i].links[j].label = e.target.value; useSiteStore.getState().updateSection(section.id, { items: it }); }}
                         className="flex-1 bg-surface border border-border rounded px-2 py-1 text-xs text-text outline-none" placeholder="Label" />
                       <input value={link.href} onChange={e => { const it = JSON.parse(JSON.stringify(section.items||[])); it[i].links[j].href = e.target.value; useSiteStore.getState().updateSection(section.id, { items: it }); }}
-                        className="flex-1 bg-surface border border-border rounded px-2 py-1 text-xs text-text outline-none" placeholder="href" />
+                        className="flex-1 bg-surface border border-border rounded px-2 py-1 text-xs text-text outline-none" placeholder="#section or /page" />
                     </div>
                   ))}
                   <button onClick={() => { const it = JSON.parse(JSON.stringify(section.items||[])); it[i].links = [...(it[i].links||[]), { label: 'Link', href: '#' }]; useSiteStore.getState().updateSection(section.id, { items: it }); }}
@@ -249,9 +348,22 @@ export const PropertiesPanel: React.FC = () => {
                 </div>
               ))}
               <button onClick={() => addSectionItem(section.id)} className="flex items-center gap-1 text-xs text-accent hover:text-accent-dim mt-1"><Plus size={11} />Add group</button>
-            </Section>
+            </Accordion>
           </>
         )}
+
+        {/* Link guide */}
+        <div className="px-4 py-3 border-t border-border">
+          <p className="text-xs font-semibold text-muted uppercase tracking-wider mb-2">Link Guide</p>
+          <div className="space-y-1.5 text-xs text-muted">
+            <p><span className="font-mono text-accent/80">#about</span> — scroll to section on same page</p>
+            <p><span className="font-mono text-accent/80">/contact</span> — navigate to another page</p>
+            <p><span className="font-mono text-accent/80">https://...</span> — external website</p>
+            <p><span className="font-mono text-accent/80">mailto:you@mail.com</span> — email link</p>
+            <p><span className="font-mono text-accent/80">tel:+237600000000</span> — phone call</p>
+          </div>
+        </div>
+
       </div>
     </aside>
   );

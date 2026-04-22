@@ -30,6 +30,11 @@ export interface SectionStyles {
   cardBg?: string;
   borderColor?: string;
   overlayOpacity?: string;
+  // Background image support
+  backgroundImage?: string;
+  backgroundOverlay?: string; // rgba or hex overlay on top of bg image
+  backgroundSize?: string;    // 'cover' | 'contain' | 'auto'
+  backgroundPosition?: string; // 'center' | 'top' | 'bottom' etc
 }
 
 export interface Section {
