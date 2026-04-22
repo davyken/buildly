@@ -4,9 +4,8 @@ import { useQuery } from '@tanstack/react-query';
 import { api } from '../lib/api';
 import { SectionRenderer } from '../components/sections/SectionRenderer';
 import { Spinner } from '../components/ui';
-import type { Site } from '../types';
+import type { Site, SitePage } from '../types';
 
-// Fetches site by slug (public endpoint — no auth needed)
 const fetchPublicSite = async (slug: string): Promise<Site> => {
   const res = await api.get(`/sites/public/${slug}`);
   return res.data.data;
@@ -25,40 +24,49 @@ export const PublishedSitePage: React.FC = () => {
     retry: 1,
   });
 
-  // Find the correct page to render
-  const currentPage = site?.pages.find(p => p.path === pagePath) ?? site?.pages[0];
+  // Find the right page to show
+  const currentPage: SitePage | undefined =
+    site?.pages.find(p => p.path === pagePath) ?? site?.pages[0];
 
-  // Set page title
+  // Page title
   useEffect(() => {
-    if (currentPage?.meta?.title) {
-      document.title = `${currentPage.meta.title} — ${site?.meta?.title || site?.name || ''}`;
-    } else if (site?.meta?.title) {
-      document.title = site.meta.title;
-    }
+    if (!site) return;
+    const title = currentPage?.meta?.title || site.meta?.title || site.name;
+    document.title = title;
   }, [currentPage, site]);
 
-  // Smooth scroll for anchor links
+  // Smooth scroll for #anchor links AND handle /page navigation within the site
   useEffect(() => {
-    const handleAnchorClick = (e: MouseEvent) => {
-      const target = e.target as HTMLAnchorElement;
-      const href = target.closest('a')?.getAttribute('href');
-      if (href?.startsWith('#')) {
+    const handle = (e: MouseEvent) => {
+      const anchor = (e.target as Element).closest('a');
+      if (!anchor) return;
+      const href = anchor.getAttribute('href');
+      if (!href) return;
+
+      // Anchor scroll: #section
+      if (href.startsWith('#')) {
         e.preventDefault();
-        const el = document.querySelector(href);
+        const id = href.slice(1);
+        const el = document.getElementById(id) || document.querySelector(`[data-section="${id}"]`);
         if (el) el.scrollIntoView({ behavior: 'smooth', block: 'start' });
+        return;
       }
+
+      // Internal page: /about, /services etc — handled by browser navigation
+      // (works because published sites all use the same /s/:slug route and React Router)
     };
-    document.addEventListener('click', handleAnchorClick);
-    return () => document.removeEventListener('click', handleAnchorClick);
+
+    document.addEventListener('click', handle);
+    return () => document.removeEventListener('click', handle);
   }, []);
+
+  // Scroll to top when page changes
+  useEffect(() => { window.scrollTo(0, 0); }, [pagePath]);
 
   if (isLoading) {
     return (
       <div className="min-h-screen bg-white flex items-center justify-center">
-        <div className="flex flex-col items-center gap-4">
-          <Spinner size={32} className="text-gray-400" />
-          <p className="text-sm text-gray-400" style={{ fontFamily: 'DM Sans, sans-serif' }}>Loading…</p>
-        </div>
+        <Spinner size={32} className="text-gray-400" />
       </div>
     );
   }
@@ -83,11 +91,20 @@ export const PublishedSitePage: React.FC = () => {
     );
   }
 
+  // Collect all Google Font families used across this page's sections
+  const fonts = new Set<string>();
+  currentPage.sections.forEach(s => {
+    if (s.styles.headingFont) fonts.add(s.styles.headingFont);
+    if (s.styles.bodyFont) fonts.add(s.styles.bodyFont);
+  });
+  const fontQuery = Array.from(fonts).map(f => `family=${encodeURIComponent(f)}:wght@400;500;600;700;800`).join('&');
+
   return (
     <>
-      {/* Google Fonts */}
+      {/* Fonts */}
       <link rel="preconnect" href="https://fonts.googleapis.com" />
-      <link href="https://fonts.googleapis.com/css2?family=Syne:wght@400;500;600;700;800&family=DM+Sans:wght@300;400;500;600&display=swap" rel="stylesheet" />
+      <link rel="preconnect" href="https://fonts.gstatic.com" crossOrigin="" />
+      <link href={`https://fonts.googleapis.com/css2?family=Syne:wght@400;700;800&family=DM+Sans:wght@400;500;600${fontQuery ? '&' + fontQuery : ''}&display=swap`} rel="stylesheet" />
 
       <div style={{ fontFamily: 'DM Sans, sans-serif', background: '#ffffff', minHeight: '100vh' }}>
         {currentPage.sections.map(section => (
@@ -100,30 +117,11 @@ export const PublishedSitePage: React.FC = () => {
           />
         ))}
 
-        {/* Powered by Buildly badge */}
-        <div style={{ position: 'fixed', bottom: '16px', right: '16px', zIndex: 9999 }}>
-          <a
-            href="/"
-            target="_blank"
-            rel="noopener noreferrer"
-            style={{
-              display: 'inline-flex',
-              alignItems: 'center',
-              gap: '6px',
-              padding: '6px 12px',
-              background: '#0f172a',
-              color: '#6ee7b7',
-              borderRadius: '999px',
-              fontSize: '11px',
-              fontWeight: '600',
-              textDecoration: 'none',
-              fontFamily: 'DM Sans, sans-serif',
-              boxShadow: '0 4px 12px rgba(0,0,0,0.3)',
-              letterSpacing: '0.01em',
-            }}
-          >
-            <span style={{ fontSize: '10px' }}>▣</span>
-            Built with Buildly
+        {/* Buildly badge */}
+        <div style={{ position: 'fixed', bottom: 16, right: 16, zIndex: 9999 }}>
+          <a href="/" target="_blank" rel="noopener noreferrer"
+            style={{ display:'inline-flex', alignItems:'center', gap:6, padding:'6px 12px', background:'#0f172a', color:'#6ee7b7', borderRadius:999, fontSize:11, fontWeight:600, textDecoration:'none', boxShadow:'0 4px 12px rgba(0,0,0,0.3)', letterSpacing:'0.01em' }}>
+            <span style={{ fontSize:10 }}>▣</span> Built with Buildly
           </a>
         </div>
       </div>

@@ -1,4 +1,3 @@
-// ── Section system ─────────────────────────────────────────────────────────────
 export type SectionType =
   | 'navbar' | 'hero' | 'about' | 'services'
   | 'testimonials' | 'faq' | 'contact' | 'footer';
@@ -30,11 +29,13 @@ export interface SectionStyles {
   cardBg?: string;
   borderColor?: string;
   overlayOpacity?: string;
-  // Background image support
   backgroundImage?: string;
-  backgroundOverlay?: string; // rgba or hex overlay on top of bg image
-  backgroundSize?: string;    // 'cover' | 'contain' | 'auto'
-  backgroundPosition?: string; // 'center' | 'top' | 'bottom' etc
+  backgroundOverlay?: string;
+  backgroundSize?: string;
+  backgroundPosition?: string;
+  // Font families
+  headingFont?: string;
+  bodyFont?: string;
 }
 
 export interface Section {
@@ -48,7 +49,6 @@ export interface Section {
   hidden?: boolean;
 }
 
-// ── Site / Page ────────────────────────────────────────────────────────────────
 export interface SitePage {
   id: string;
   name: string;
@@ -82,7 +82,6 @@ export interface Site {
   updatedAt?: string;
 }
 
-// ── Auth ───────────────────────────────────────────────────────────────────────
 export interface AuthUser {
   id: string;
   email: string;
@@ -91,7 +90,6 @@ export interface AuthUser {
   limits?: { maxSites: number; customDomains: number };
 }
 
-// ── Template ──────────────────────────────────────────────────────────────────
 export interface Template {
   id: string;
   name: string;
@@ -102,7 +100,6 @@ export interface Template {
   meta: SiteMeta;
 }
 
-// ── API ───────────────────────────────────────────────────────────────────────
 export interface ApiResponse<T> {
   success: boolean;
   data: T;

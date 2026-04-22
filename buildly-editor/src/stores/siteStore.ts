@@ -3,6 +3,11 @@ import { v4 as uuidv4 } from 'uuid';
 import type { Site, SitePage, Section, SectionType } from '../types';
 import { createSection } from '../lib/sectionDefaults';
 
+interface HistoryEntry {
+  pages: SitePage[];
+  activePageId: string | null;
+}
+
 interface SiteStore {
   site: Site | null;
   activePageId: string | null;
@@ -11,37 +16,47 @@ interface SiteStore {
   isSaving: boolean;
   previewMode: boolean;
   mobilePreview: boolean;
+  history: HistoryEntry[];
+  historyIndex: number;
 
-  // Site
   setSite: (site: Site) => void;
   setIsSaving: (v: boolean) => void;
   setIsDirty: (v: boolean) => void;
   setPreviewMode: (v: boolean) => void;
   setMobilePreview: (v: boolean) => void;
 
-  // Pages
   activePage: () => SitePage | null;
   setActivePage: (id: string) => void;
   addPage: (name: string, path: string) => void;
   removePage: (id: string) => void;
 
-  // Section selection
   selectSection: (id: string | null) => void;
   selectedSection: () => Section | null;
 
-  // Section mutations
+  // History
+  pushHistory: () => void;
+  undo: () => void;
+  redo: () => void;
+  canUndo: () => boolean;
+  canRedo: () => boolean;
+
   addSection: (type: SectionType, variantId: number, afterId?: string) => void;
   updateSection: (id: string, changes: Partial<Section>) => void;
   updateSectionContent: (id: string, key: string, value: string) => void;
   updateSectionStyle: (id: string, key: string, value: string) => void;
-  updateSectionItem: (sectionId: string, itemId: string, changes: Record<string, string>) => void;
+  updateSectionItem: (sectionId: string, itemId: string, changes: Record<string, any>) => void;
   addSectionItem: (sectionId: string) => void;
   removeSectionItem: (sectionId: string, itemId: string) => void;
   deleteSection: (id: string) => void;
   duplicateSection: (id: string) => void;
   moveSectionUp: (id: string) => void;
   moveSectionDown: (id: string) => void;
+  reorderSections: (fromIndex: number, toIndex: number) => void;
   changeVariant: (id: string, type: SectionType, variantId: number) => void;
+}
+
+function clonePages(pages: SitePage[]): SitePage[] {
+  return JSON.parse(JSON.stringify(pages));
 }
 
 export const useSiteStore = create<SiteStore>()((set, get) => ({
@@ -52,15 +67,23 @@ export const useSiteStore = create<SiteStore>()((set, get) => ({
   isSaving: false,
   previewMode: false,
   mobilePreview: false,
+  history: [],
+  historyIndex: -1,
 
   setSite: (site) => {
-    // Migrate pages that came from the old free-form canvas format (had elements[], not sections[])
     const migratedPages = site.pages.map((p: any) => ({
       ...p,
       sections: Array.isArray(p.sections) ? p.sections : [],
     }));
-    set({ site: { ...site, pages: migratedPages }, activePageId: migratedPages[0]?.id ?? null, isDirty: false });
+    set({
+      site: { ...site, pages: migratedPages },
+      activePageId: migratedPages[0]?.id ?? null,
+      isDirty: false,
+      history: [],
+      historyIndex: -1,
+    });
   },
+
   setIsSaving: (v) => set({ isSaving: v }),
   setIsDirty: (v) => set({ isDirty: v }),
   setPreviewMode: (v) => set({ previewMode: v, selectedSectionId: null }),
@@ -76,6 +99,7 @@ export const useSiteStore = create<SiteStore>()((set, get) => ({
   addPage: (name, path) => {
     const { site } = get();
     if (!site) return;
+    get().pushHistory();
     const newPage: SitePage = { id: uuidv4(), name, path, sections: [], meta: { title: name } };
     set({ site: { ...site, pages: [...site.pages, newPage] }, isDirty: true });
   },
@@ -83,6 +107,7 @@ export const useSiteStore = create<SiteStore>()((set, get) => ({
   removePage: (id) => {
     const { site, activePageId } = get();
     if (!site || site.pages.length <= 1) return;
+    get().pushHistory();
     const pages = site.pages.filter((p) => p.id !== id);
     set({ site: { ...site, pages }, activePageId: activePageId === id ? pages[0].id : activePageId, isDirty: true });
   },
@@ -96,10 +121,39 @@ export const useSiteStore = create<SiteStore>()((set, get) => ({
     return page?.sections.find((s) => s.id === selectedSectionId) ?? null;
   },
 
-  // ── Section mutations ─────────────────────────────────────────────────────
+  // ── History ────────────────────────────────────────────────────────────────
+  pushHistory: () => {
+    const { site, activePageId, history, historyIndex } = get();
+    if (!site) return;
+    const entry: HistoryEntry = { pages: clonePages(site.pages), activePageId };
+    const trimmed = history.slice(0, historyIndex + 1);
+    trimmed.push(entry);
+    const limited = trimmed.slice(-50); // keep max 50
+    set({ history: limited, historyIndex: limited.length - 1 });
+  },
+
+  undo: () => {
+    const { history, historyIndex, site } = get();
+    if (historyIndex <= 0 || !site) return;
+    const prev = history[historyIndex - 1];
+    set({ site: { ...site, pages: prev.pages }, activePageId: prev.activePageId, historyIndex: historyIndex - 1, isDirty: true, selectedSectionId: null });
+  },
+
+  redo: () => {
+    const { history, historyIndex, site } = get();
+    if (historyIndex >= history.length - 1 || !site) return;
+    const next = history[historyIndex + 1];
+    set({ site: { ...site, pages: next.pages }, activePageId: next.activePageId, historyIndex: historyIndex + 1, isDirty: true, selectedSectionId: null });
+  },
+
+  canUndo: () => get().historyIndex > 0,
+  canRedo: () => get().historyIndex < get().history.length - 1,
+
+  // ── Sections ────────────────────────────────────────────────────────────────
   addSection: (type, variantId, afterId) => {
     const { site, activePageId } = get();
     if (!site || !activePageId) return;
+    get().pushHistory();
     const newSection = createSection(type, variantId);
     const pages = site.pages.map((p) => {
       if (p.id !== activePageId) return p;
@@ -121,7 +175,7 @@ export const useSiteStore = create<SiteStore>()((set, get) => ({
     const pages = site.pages.map((p) =>
       p.id === activePageId
         ? { ...p, sections: p.sections.map((s) => (s.id === id ? { ...s, ...changes } : s)) }
-        : p,
+        : p
     );
     set({ site: { ...site, pages }, isDirty: true });
   },
@@ -132,7 +186,7 @@ export const useSiteStore = create<SiteStore>()((set, get) => ({
     const pages = site.pages.map((p) =>
       p.id === activePageId
         ? { ...p, sections: p.sections.map((s) => s.id === id ? { ...s, content: { ...s.content, [key]: value } } : s) }
-        : p,
+        : p
     );
     set({ site: { ...site, pages }, isDirty: true });
   },
@@ -143,7 +197,7 @@ export const useSiteStore = create<SiteStore>()((set, get) => ({
     const pages = site.pages.map((p) =>
       p.id === activePageId
         ? { ...p, sections: p.sections.map((s) => s.id === id ? { ...s, styles: { ...s.styles, [key]: value } } : s) }
-        : p,
+        : p
     );
     set({ site: { ...site, pages }, isDirty: true });
   },
@@ -153,10 +207,8 @@ export const useSiteStore = create<SiteStore>()((set, get) => ({
     if (!site || !activePageId) return;
     const pages = site.pages.map((p) =>
       p.id === activePageId
-        ? { ...p, sections: p.sections.map((s) => s.id === sectionId
-            ? { ...s, items: s.items?.map((item) => item.id === itemId ? { ...item, ...changes } : item) }
-            : s) }
-        : p,
+        ? { ...p, sections: p.sections.map((s) => s.id === sectionId ? { ...s, items: s.items?.map((item) => item.id === itemId ? { ...item, ...changes } : item) } : s) }
+        : p
     );
     set({ site: { ...site, pages }, isDirty: true });
   },
@@ -164,14 +216,18 @@ export const useSiteStore = create<SiteStore>()((set, get) => ({
   addSectionItem: (sectionId) => {
     const { site, activePageId } = get();
     if (!site || !activePageId) return;
-    const page = site.pages.find((p) => p.id === activePageId);
-    const section = page?.sections.find((s) => s.id === sectionId);
-    if (!section) return;
-    const newItem = { id: uuidv4(), title: 'New Item', description: 'Description here', icon: '✦', question: 'New Question', answer: 'Answer here', name: 'New Person', role: 'Title, Company', quote: 'Great experience working together!', label: 'Link', href: '#' };
+    get().pushHistory();
+    const newItem = {
+      id: uuidv4(), title: 'New Item', description: 'Description here', icon: '✦',
+      question: 'New Question?', answer: 'Answer here.',
+      name: 'New Person', role: 'Title, Company',
+      quote: 'Great experience!', label: 'Link', href: '#', group: 'Links',
+      links: [{ label: 'Example', href: '#' }],
+    };
     const pages = site.pages.map((p) =>
       p.id === activePageId
         ? { ...p, sections: p.sections.map((s) => s.id === sectionId ? { ...s, items: [...(s.items ?? []), newItem] } : s) }
-        : p,
+        : p
     );
     set({ site: { ...site, pages }, isDirty: true });
   },
@@ -179,10 +235,11 @@ export const useSiteStore = create<SiteStore>()((set, get) => ({
   removeSectionItem: (sectionId, itemId) => {
     const { site, activePageId } = get();
     if (!site || !activePageId) return;
+    get().pushHistory();
     const pages = site.pages.map((p) =>
       p.id === activePageId
         ? { ...p, sections: p.sections.map((s) => s.id === sectionId ? { ...s, items: s.items?.filter((i) => i.id !== itemId) } : s) }
-        : p,
+        : p
     );
     set({ site: { ...site, pages }, isDirty: true });
   },
@@ -190,8 +247,9 @@ export const useSiteStore = create<SiteStore>()((set, get) => ({
   deleteSection: (id) => {
     const { site, activePageId, selectedSectionId } = get();
     if (!site || !activePageId) return;
+    get().pushHistory();
     const pages = site.pages.map((p) =>
-      p.id === activePageId ? { ...p, sections: p.sections.filter((s) => s.id !== id) } : p,
+      p.id === activePageId ? { ...p, sections: p.sections.filter((s) => s.id !== id) } : p
     );
     set({ site: { ...site, pages }, isDirty: true, selectedSectionId: selectedSectionId === id ? null : selectedSectionId });
   },
@@ -199,6 +257,7 @@ export const useSiteStore = create<SiteStore>()((set, get) => ({
   duplicateSection: (id) => {
     const { site, activePageId } = get();
     if (!site || !activePageId) return;
+    get().pushHistory();
     const page = site.pages.find((p) => p.id === activePageId);
     if (!page) return;
     const original = page.sections.find((s) => s.id === id);
@@ -217,6 +276,7 @@ export const useSiteStore = create<SiteStore>()((set, get) => ({
   moveSectionUp: (id) => {
     const { site, activePageId } = get();
     if (!site || !activePageId) return;
+    get().pushHistory();
     const pages = site.pages.map((p) => {
       if (p.id !== activePageId) return p;
       const sections = [...p.sections];
@@ -231,6 +291,7 @@ export const useSiteStore = create<SiteStore>()((set, get) => ({
   moveSectionDown: (id) => {
     const { site, activePageId } = get();
     if (!site || !activePageId) return;
+    get().pushHistory();
     const pages = site.pages.map((p) => {
       if (p.id !== activePageId) return p;
       const sections = [...p.sections];
@@ -242,16 +303,34 @@ export const useSiteStore = create<SiteStore>()((set, get) => ({
     set({ site: { ...site, pages }, isDirty: true });
   },
 
+  reorderSections: (fromIndex, toIndex) => {
+    const { site, activePageId } = get();
+    if (!site || !activePageId || fromIndex === toIndex) return;
+    get().pushHistory();
+    const pages = site.pages.map((p) => {
+      if (p.id !== activePageId) return p;
+      const sections = [...p.sections];
+      const [moved] = sections.splice(fromIndex, 1);
+      sections.splice(toIndex, 0, moved);
+      return { ...p, sections };
+    });
+    set({ site: { ...site, pages }, isDirty: true });
+  },
+
   changeVariant: (id, type, variantId) => {
     const { site, activePageId } = get();
     if (!site || !activePageId) return;
+    get().pushHistory();
     const newSection = createSection(type, variantId);
     const page = site.pages.find((p) => p.id === activePageId);
     const old = page?.sections.find((s) => s.id === id);
-    // Preserve content and items when switching variant
-    const merged: Section = { ...newSection, id, content: { ...newSection.content, ...(old?.content ?? {}) }, items: old?.items ?? newSection.items };
+    const merged: Section = {
+      ...newSection, id,
+      content: { ...newSection.content, ...(old?.content ?? {}) },
+      items: old?.items ?? newSection.items,
+    };
     const pages = site.pages.map((p) =>
-      p.id === activePageId ? { ...p, sections: p.sections.map((s) => s.id === id ? merged : s) } : p,
+      p.id === activePageId ? { ...p, sections: p.sections.map((s) => s.id === id ? merged : s) } : p
     );
     set({ site: { ...site, pages }, isDirty: true });
   },
