@@ -1,0 +1,77 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+:root {
+  --canvas: #0e0e10;
+  --surface: #18181b;
+  --panel: #1c1c1f;
+  --border: #2a2a2e;
+  --accent: #6ee7b7;
+  --accent-dim: #34d399;
+  --muted: #71717a;
+  --text: #fafafa;
+  --text-dim: #a1a1aa;
+}
+
+* { box-sizing: border-box; }
+
+html, body, #root {
+  height: 100%;
+  margin: 0;
+  padding: 0;
+  background: var(--canvas);
+  color: var(--text);
+  font-family: 'DM Sans', sans-serif;
+  -webkit-font-smoothing: antialiased;
+}
+
+/* Scrollbar */
+::-webkit-scrollbar { width: 6px; height: 6px; }
+::-webkit-scrollbar-track { background: transparent; }
+::-webkit-scrollbar-thumb { background: var(--border); border-radius: 3px; }
+::-webkit-scrollbar-thumb:hover { background: var(--muted); }
+
+/* Selection */
+::selection { background: rgba(110,231,183,0.25); color: var(--text); }
+
+/* Canvas grid pattern */
+.canvas-grid {
+  background-color: #111113;
+  background-image:
+    linear-gradient(rgba(255,255,255,0.03) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(255,255,255,0.03) 1px, transparent 1px);
+  background-size: 24px 24px;
+}
+
+/* Element selection ring */
+.element-selected {
+  outline: 2px solid var(--accent) !important;
+  outline-offset: 1px;
+}
+
+.element-hovered {
+  outline: 1px dashed rgba(110,231,183,0.4) !important;
+  outline-offset: 1px;
+}
+
+/* Resize handles */
+.resize-handle {
+  position: absolute;
+  width: 8px;
+  height: 8px;
+  background: var(--accent);
+  border: 1px solid var(--canvas);
+  border-radius: 2px;
+  z-index: 9999;
+}
+
+/* No-select during drag */
+.dragging { user-select: none; }
+
+/* Smooth transitions */
+.panel-transition { transition: all 0.2s ease; }
+
+@layer utilities {
+  .text-balance { text-wrap: balance; }
+}
