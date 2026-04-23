@@ -371,15 +371,23 @@ const SiteCard: React.FC<{
   onDuplicate: () => void;
 }> = ({ site, onEdit, onDelete, onDuplicate }) => (
   <div className="group border border-border rounded-2xl overflow-hidden bg-surface hover:border-zinc-600 transition-all">
-    <div className="h-36 bg-panel relative cursor-pointer overflow-hidden" onClick={onEdit}>
-      <div className="absolute inset-0 canvas-grid opacity-30" />
-      <div className="absolute inset-0 flex items-center justify-center">
-        <div className="text-center">
-          <Globe size={22} className="text-zinc-700 mx-auto mb-1.5" />
-          <span className="text-xs text-zinc-600 font-mono">/{site.slug}</span>
+    <div className="h-36 relative cursor-pointer overflow-hidden rounded-t-2xl" onClick={onEdit} style={{ background: '#f8fafc' }}>
+      {site.status === 'published' ? (
+        <iframe 
+          src={`http://localhost:3001/s/${site.slug}`}
+          className="w-full h-full border-0 rounded-t-2xl"
+          title={site.name}
+        />
+      ) : (
+        <div className="absolute inset-0 canvas-grid opacity-20 flex items-center justify-center">
+          <div className="text-center text-zinc-500 text-sm font-medium">
+            <Layers size={24} className="mx-auto mb-2 opacity-50" />
+            <div>/ {site.slug}</div>
+            <div className="text-xs opacity-75 mt-1">Draft</div>
+          </div>
         </div>
-      </div>
-      <div className="absolute top-2 right-2">
+      )}
+      <div className="absolute top-2 right-2 z-10">
         <Badge variant={site.status === 'published' ? 'green' : 'default'}>
           {site.status === 'published' ? '● Live' : '○ Draft'}
         </Badge>

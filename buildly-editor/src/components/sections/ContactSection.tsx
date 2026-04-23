@@ -18,6 +18,13 @@ export const ContactSection: React.FC<Props> = ({ section, preview, siteSlug }) 
   const [submitted, setSubmitted] = useState(false);
   const [sending, setSending] = useState(false);
 
+  const fontStyle: React.CSSProperties = {
+    fontFamily: styles.headingFont ? `"${styles.headingFont}", 'Inter', Syne, sans-serif` : 'Syne, sans-serif',
+  };
+  const bodyFontStyle: React.CSSProperties = {
+    fontFamily: styles.bodyFont ? `"${styles.bodyFont}", 'Inter', DM Sans, sans-serif` : 'DM Sans, sans-serif',
+  };
+
   const waUrl = `https://wa.me/${c.whatsappPhone}?text=${encodeURIComponent(c.whatsappMessage || 'Hello!')}`;
 
   const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
@@ -44,7 +51,7 @@ export const ContactSection: React.FC<Props> = ({ section, preview, siteSlug }) 
   const ContactForm = () => submitted ? (
     <div className="h-full flex flex-col items-center justify-center text-center py-12">
       <div className="text-5xl mb-4">✅</div>
-      <h3 className="text-xl font-bold mb-2" style={{ color: styles.headingColor }}>{c.successMessage || 'Message sent!'}</h3>
+      <h3 className="text-xl font-bold mb-2" style={{ color: styles.headingColor, ...fontStyle }}>{c.successMessage || 'Message sent!'}</h3>
     </div>
   ) : (
     <form onSubmit={handleSubmit} className="flex flex-col gap-5">
@@ -75,8 +82,8 @@ export const ContactSection: React.FC<Props> = ({ section, preview, siteSlug }) 
         <div className="grid md:grid-cols-2 gap-16">
           <div>
             {c.badge && <div className="inline-block px-3 py-1 rounded-full text-xs font-bold tracking-widest uppercase mb-6 border" style={{ borderColor: `${styles.accentColor}40`, color: styles.accentColor, background: `${styles.accentColor}10` }}>{c.badge}</div>}
-            <h2 className="text-3xl md:text-5xl font-black leading-tight mb-6" style={{ color: styles.headingColor, fontFamily: 'Syne, sans-serif' }}>{c.heading}</h2>
-            <p className="text-base leading-relaxed mb-10" style={{ color: styles.mutedColor }}>{c.subheading}</p>
+            <h2 className="text-3xl md:text-5xl font-black leading-tight mb-6" style={{ color: styles.headingColor, ...fontStyle }}>{c.heading}</h2>
+            <p className="text-base leading-relaxed mb-10" style={{ color: styles.mutedColor, ...bodyFontStyle }}>{c.subheading}</p>
             <div className="flex flex-col gap-5">
               {c.email && <div className="flex items-center gap-4"><div className="w-10 h-10 rounded-xl flex items-center justify-center" style={{ background: `${styles.accentColor}15` }}>✉️</div><a href={`mailto:${c.email}`} className="text-sm font-medium" style={{ color: styles.textColor }}>{c.email}</a></div>}
               {c.phone && <div className="flex items-center gap-4"><div className="w-10 h-10 rounded-xl flex items-center justify-center" style={{ background: `${styles.accentColor}15` }}>📞</div><a href={`tel:${c.phone}`} className="text-sm font-medium" style={{ color: styles.textColor }}>{c.phone}</a></div>}
@@ -97,8 +104,8 @@ export const ContactSection: React.FC<Props> = ({ section, preview, siteSlug }) 
       {overlay && <div style={overlay} />}
       <div className="max-w-2xl mx-auto px-6 text-center" style={cs}>
         {c.badge && <div className="inline-block px-3 py-1 rounded-full text-xs font-bold tracking-widest uppercase mb-5" style={{ background: `${styles.accentColor}15`, color: styles.accentColor }}>{c.badge}</div>}
-        <h2 className="text-3xl md:text-5xl font-black leading-tight mb-4" style={{ color: styles.headingColor, fontFamily: 'Syne, sans-serif' }}>{c.heading}</h2>
-        <p className="text-base mb-10 leading-relaxed" style={{ color: styles.mutedColor }}>{c.subheading}</p>
+        <h2 className="text-3xl md:text-5xl font-black leading-tight mb-4" style={{ color: styles.headingColor, ...fontStyle }}>{c.heading}</h2>
+        <p className="text-base mb-10 leading-relaxed" style={{ color: styles.mutedColor, ...bodyFontStyle }}>{c.subheading}</p>
         {c.whatsappPhone && <a href={waUrl} target="_blank" rel="noopener noreferrer" className="inline-flex items-center gap-3 px-8 py-4 rounded-xl font-bold text-base mb-8 transition-all hover:scale-105" style={{ background: '#25D366', color: '#fff' }}><WaIcon /> Chat on WhatsApp</a>}
         <div className="text-center mb-6" style={{ color: styles.mutedColor }}><span className="text-sm">— or send a message —</span></div>
         <div className="p-8 rounded-2xl border text-left" style={{ background: styles.cardBg, borderColor: styles.borderColor }}>

@@ -3,9 +3,9 @@ import { useNavigate } from 'react-router-dom';
 import toast from 'react-hot-toast';
 import {
   ArrowLeft, Undo2, Redo2, Eye, EyeOff, Monitor, Smartphone,
-  ZoomIn, ZoomOut, Globe, Loader2, Save, CheckCircle2, Wifi, WifiOff
+  Globe, Loader2, Save, CheckCircle2, Wifi, WifiOff
 } from 'lucide-react';
-import { useCanvasStore } from '../../stores/canvasStore';
+import { useSiteStore } from '../../stores/siteStore';
 import { sitesApi, publishApi } from '../../lib/api';
 import { Button, Badge, Tooltip } from '../ui';
 
@@ -15,9 +15,8 @@ export const EditorToolbar: React.FC = () => {
     site, isDirty, isSaving, setIsSaving, setIsDirty,
     undo, redo, history, historyIndex,
     previewMode, setPreviewMode, mobilePreview, setMobilePreview,
-    zoom, zoomIn, zoomOut, resetZoom,
     setSite,
-  } = useCanvasStore();
+  } = useSiteStore();
 
   const saveTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
@@ -35,7 +34,7 @@ export const EditorToolbar: React.FC = () => {
     if (!site || isSaving) return;
     setIsSaving(true);
     try {
-      const res = await sitesApi.update(site._id, { pages: site.pages, meta: site.meta, name: site.name, globalBackground: site.globalBackground });
+      const res = await sitesApi.update(site._id!, { pages: site.pages, meta: site.meta, name: site.name, globalBackground: site.globalBackground });
       setSite(res.data.data);
       setIsDirty(false);
     } catch {
@@ -43,7 +42,7 @@ export const EditorToolbar: React.FC = () => {
     } finally {
       setIsSaving(false);
     }
-  }, [site, isSaving]);
+  }, [site, isSaving, setIsSaving, setSite, setIsDirty]);
 
   const handleManualSave = () => {
     if (saveTimerRef.current) clearTimeout(saveTimerRef.current);
@@ -54,17 +53,16 @@ export const EditorToolbar: React.FC = () => {
     if (!site) return;
     const tid = toast.loading('Publishing...');
     try {
-      const { data } = await publishApi.publish(site._id);
+      const { data } = await publishApi.publish(site._id!);
       toast.dismiss(tid);
-      // Poll job status
       const jobId = data.data.jobId;
       const poll = setInterval(async () => {
         const { data: job } = await publishApi.jobStatus(jobId);
         if (job.data.state === 'completed') {
           clearInterval(poll);
-          const { data: info } = await publishApi.info(site._id);
+          const { data: info } = await publishApi.info(site._id!);
           setSite({ ...site, status: 'published', publishedAt: info.data.publishedAt });
-          toast.success(`🚀 Site is live! ${info.data.publicUrl}`, { duration: 5000 });
+          toast.success(`Site is live! ${info.data.publicUrl}`, { duration: 5000 });
         } else if (job.data.state === 'failed') {
           clearInterval(poll);
           toast.error('Publish failed. Try again.');
@@ -79,13 +77,12 @@ export const EditorToolbar: React.FC = () => {
   const handleUnpublish = async () => {
     if (!site || !confirm('Take your site offline?')) return;
     try {
-      await publishApi.unpublish(site._id);
+      await publishApi.unpublish(site._id!);
       setSite({ ...site, status: 'draft', publishedAt: undefined });
       toast.success('Site taken offline');
     } catch { toast.error('Failed to unpublish'); }
   };
 
-  // Keyboard shortcuts
   useEffect(() => {
     const handler = (e: KeyboardEvent) => {
       const mod = e.metaKey || e.ctrlKey;
@@ -96,21 +93,19 @@ export const EditorToolbar: React.FC = () => {
     };
     window.addEventListener('keydown', handler);
     return () => window.removeEventListener('keydown', handler);
-  }, [undo, redo, previewMode]);
+  }, [undo, redo, handleManualSave, previewMode, setPreviewMode]);
 
   const canUndo = historyIndex > 0;
   const canRedo = historyIndex < history.length - 1;
 
   return (
     <header className="h-12 bg-surface border-b border-border flex items-center px-3 gap-2 flex-shrink-0 z-50">
-      {/* Back */}
       <Tooltip label="Back to dashboard">
         <Button variant="ghost" size="sm" icon={<ArrowLeft size={15} />} onClick={() => navigate('/dashboard')} />
       </Tooltip>
 
       <div className="w-px h-5 bg-border mx-1" />
 
-      {/* Site name */}
       <div className="flex items-center gap-2 min-w-0">
         <span className="font-display font-semibold text-sm text-text truncate max-w-[160px]">
           {site?.name || 'Untitled'}
@@ -121,7 +116,6 @@ export const EditorToolbar: React.FC = () => {
         }
       </div>
 
-      {/* Save status */}
       <div className="flex items-center gap-1.5 text-xs ml-2">
         {isSaving ? (
           <span className="text-muted flex items-center gap-1"><Loader2 size={12} className="animate-spin" /> Saving…</span>
@@ -134,7 +128,6 @@ export const EditorToolbar: React.FC = () => {
 
       <div className="flex-1" />
 
-      {/* Undo/Redo */}
       <div className="flex items-center gap-0.5">
         <Tooltip label="Undo (Ctrl+Z)">
           <Button variant="ghost" size="sm" icon={<Undo2 size={14} />} disabled={!canUndo} onClick={undo} />
@@ -146,22 +139,6 @@ export const EditorToolbar: React.FC = () => {
 
       <div className="w-px h-5 bg-border mx-1" />
 
-      {/* Zoom */}
-      <div className="flex items-center gap-1">
-        <Tooltip label="Zoom out">
-          <Button variant="ghost" size="sm" icon={<ZoomOut size={14} />} onClick={zoomOut} />
-        </Tooltip>
-        <button onClick={resetZoom} className="text-xs font-mono text-text-dim hover:text-text w-10 text-center">
-          {Math.round(zoom * 100)}%
-        </button>
-        <Tooltip label="Zoom in">
-          <Button variant="ghost" size="sm" icon={<ZoomIn size={14} />} onClick={zoomIn} />
-        </Tooltip>
-      </div>
-
-      <div className="w-px h-5 bg-border mx-1" />
-
-      {/* Preview toggle */}
       <div className="flex items-center gap-0.5">
         <Tooltip label={previewMode ? 'Exit preview (Ctrl+Shift+P)' : 'Preview (Ctrl+Shift+P)'}>
           <Button
@@ -186,7 +163,6 @@ export const EditorToolbar: React.FC = () => {
 
       <div className="w-px h-5 bg-border mx-1" />
 
-      {/* Save + Publish */}
       <Tooltip label="Save (Ctrl+S)">
         <Button variant="ghost" size="sm" icon={<Save size={14} />} onClick={handleManualSave} loading={isSaving} />
       </Tooltip>
@@ -202,3 +178,4 @@ export const EditorToolbar: React.FC = () => {
     </header>
   );
 };
+
