@@ -39,6 +39,8 @@ function NavLink({ href, label, style, className, onClick }: { href: string; lab
 export const NavbarSection: React.FC<Props> = ({ section, pages = [] }) => {
   const { content: c, navLinks = [], styles, variant } = section;
   const [menuOpen, setMenuOpen] = useState(false);
+  const [scrolled, setScrolled] = useState(false);
+  const bgStyle = getSectionBgStyle(styles);
 
   // Logo mode: 'both' | 'logo' | 'text'
   const logoMode = c.logoMode || 'both';

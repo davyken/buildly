@@ -140,17 +140,18 @@ export const PropertiesPanel: React.FC = () => {
         {variants.length > 1 && (
           <Accordion title="Design Variant">
             <div className="flex flex-col gap-2">
-              {variants.map(v => (
-                <button key={v.id} onClick={() => changeVariant(section.id, section.type as SectionType, v.id)}
-                  className={clsx('flex items-center gap-2 px-3 py-2 rounded-lg border text-xs font-medium transition-all text-left',
-                    section.variant === v.id ? 'border-accent text-accent bg-accent/10' : 'border-border text-muted hover:border-zinc-600 hover:text-text-dim')}>
-                  <div className={clsx('w-2 h-2 rounded-full flex-shrink-0', section.variant === v.id ? 'bg-accent' : 'bg-border')} />
-                  {v.label}
-                </button>
-              ))}
-            </div>
-          </Accordion>
+{variants.map(v => (
+                 <button key={v.id} onClick={() => changeVariant(section.id, section.type, v.id)}
+                   className={clsx('flex items-center gap-2 px-3 py-2 rounded-lg border text-xs font-medium transition-all text-left',
+                     section.variant === v.id ? 'border-accent text-accent bg-accent/10' : 'border-border text-muted hover:border-zinc-600 hover:text-text-dim')}>
+                   <div className={clsx('w-2 h-2 rounded-full flex-shrink-0', section.variant === v.id ? 'bg-accent' : 'bg-border')} />
+                   {v.label}
+                 </button>
+               ))}
+             </div>
+           </Accordion>
         )}
+
 
         {/* Colors & Background */}
         <Accordion title="Colors & Background">
