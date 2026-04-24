@@ -133,6 +133,23 @@ export const Tooltip: React.FC<{ label: string; children: React.ReactNode; side?
   );
 };
 
+// ── Card ─────────────────────────────────────────────────────────────────────
+export const Card: React.FC<React.HTMLAttributes<HTMLDivElement>> = ({ children, className, ...props }) => (
+  <div className={clsx('rounded-2xl', className)} {...props}>{children}</div>
+);
+
+export const CardHeader: React.FC<React.HTMLAttributes<HTMLDivElement>> = ({ children, className, ...props }) => (
+  <div className={clsx('px-6 pt-6', className)} {...props}>{children}</div>
+);
+
+export const CardTitle: React.FC<React.HTMLAttributes<HTMLHeadingElement>> = ({ children, className, ...props }) => (
+  <h3 className={clsx('font-display font-semibold text-text', className)} {...props}>{children}</h3>
+);
+
+export const CardContent: React.FC<React.HTMLAttributes<HTMLDivElement>> = ({ children, className, ...props }) => (
+  <div className={clsx('px-6 pb-6', className)} {...props}>{children}</div>
+);
+
 // ── ColorPicker ───────────────────────────────────────────────────────────────
 const PRESETS = ['#ffffff','#000000','#f8f9fa','#e9ecef','#111827','#1f2937','#374151','#6ee7b7','#34d399','#6366f1','#8b5cf6','#ec4899','#f59e0b','#ef4444','#3b82f6','#06b6d4','transparent'];
 

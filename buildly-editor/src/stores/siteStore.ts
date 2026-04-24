@@ -24,6 +24,7 @@ interface SiteStore {
   setIsDirty: (v: boolean) => void;
   setPreviewMode: (v: boolean) => void;
   setMobilePreview: (v: boolean) => void;
+  updateSiteName: (name: string) => void;
 
   activePage: () => SitePage | null;
   setActivePage: (id: string) => void;
@@ -88,6 +89,11 @@ export const useSiteStore = create<SiteStore>()((set, get) => ({
   setIsDirty: (v) => set({ isDirty: v }),
   setPreviewMode: (v) => set({ previewMode: v, selectedSectionId: null }),
   setMobilePreview: (v) => set({ mobilePreview: v }),
+  updateSiteName: (name) => {
+    const { site } = get();
+    if (!site) return;
+    set({ site: { ...site, name }, isDirty: true });
+  },
 
   activePage: () => {
     const { site, activePageId } = get();
@@ -224,9 +230,9 @@ export const useSiteStore = create<SiteStore>()((set, get) => ({
       items: [],
       content: { heading: 'New Heading', brand: '', image: '', video: '' },
       navLinks: [],
-      quote: 'New Quote?', answer: 'Answer here.',
+      quote: 'Great experience!', answer: 'Answer here.',
       name: 'New Person', role: 'Title, Company',
-      quote: 'Great experience!', label: 'Link', href: '#', group: 'Links',
+      label: 'Link', href: '#', group: 'Links',
       links: [{ label: 'Example', href: '#' }],
     };
     const pages = site.pages.map((p) =>

@@ -166,3 +166,4 @@ export const DEFAULT_TEMPLATES = [
   }
 ];
 
+              heading: 'Everything You Need to Succeed Online',
