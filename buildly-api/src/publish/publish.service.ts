@@ -54,11 +54,23 @@ export class PublishService {
     if (!site) throw new NotFoundException('Site not found');
     if (String(site.userId) !== userId) throw new ForbiddenException('Access denied');
     const rendererUrl = process.env.RENDERER_URL ?? 'http://localhost:3001';
+    const appUrl = process.env.APP_URL ?? 'http://localhost:3000';
+    let appHost = 'yourapp.io';
+    try {
+      appHost = new URL(appUrl).hostname;
+    } catch {}
     return {
-      status: site.status, isPublished: site.status === SiteStatus.PUBLISHED,
+      status: site.status,
+      isPublished: site.status === SiteStatus.PUBLISHED,
       publishedAt: site.publishedAt,
       publicUrl: site.status === SiteStatus.PUBLISHED ? `${rendererUrl}/s/${site.slug}` : null,
       customDomainUrl: site.customDomain ? `https://${site.customDomain}` : null,
+      dnsRecord: site.status === SiteStatus.PUBLISHED ? {
+        type: 'CNAME',
+        host: `sites.${appHost}`,
+        value: `sites.${appHost}`,
+        note: 'DNS changes can take up to 24 hours to propagate.',
+      } : null,
     };
   }
 }

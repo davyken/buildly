@@ -14,14 +14,21 @@ export const TestimonialsSection: React.FC<Props> = ({ section }) => {
   const overlay = getOverlayStyle(styles);
   const cs = getContentStyle(styles);
 
+  const fontStyle: React.CSSProperties = {
+    fontFamily: styles.headingFont ? `"${styles.headingFont}", 'Inter', Syne, sans-serif` : 'Syne, sans-serif',
+  };
+  const bodyFontStyle: React.CSSProperties = {
+    fontFamily: styles.bodyFont ? `"${styles.bodyFont}", 'Inter', DM Sans, sans-serif` : 'DM Sans, sans-serif',
+  };
+
   if (variant === 1) return (
     <section id="testimonials" style={{ ...bgStyle, position: 'relative' }} className="w-full py-24 md:py-32">
       {overlay && <div style={overlay} />}
       <div className="max-w-6xl mx-auto px-6" style={cs}>
         <div className="text-center max-w-2xl mx-auto mb-16">
           {c.badge && <div className="inline-block px-3 py-1 rounded-full text-xs font-bold tracking-widest uppercase mb-5 border" style={{ borderColor: `${styles.accentColor}40`, color: styles.accentColor, background: `${styles.accentColor}10` }}>{c.badge}</div>}
-          <h2 className="text-3xl md:text-5xl font-black mb-4" style={{ color: styles.headingColor, fontFamily: 'Syne, sans-serif' }}>{c.heading}</h2>
-          {c.subheading && <p className="text-base" style={{ color: styles.mutedColor }}>{c.subheading}</p>}
+          <h2 className="text-3xl md:text-5xl font-black mb-4" style={{ color: styles.headingColor, ...fontStyle }}>{c.heading}</h2>
+          {c.subheading && <p className="text-base" style={{ color: styles.mutedColor, ...bodyFontStyle }}>{c.subheading}</p>}
         </div>
         <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
           {items.map(item => (
@@ -31,8 +38,8 @@ export const TestimonialsSection: React.FC<Props> = ({ section }) => {
               <div className="flex items-center gap-3 mt-6 pt-6 border-t" style={{ borderColor: styles.borderColor }}>
                 {item.image && <img src={item.image} alt={item.name} className="w-10 h-10 rounded-full object-cover" />}
                 <div>
-                  <p className="text-sm font-bold" style={{ color: styles.headingColor }}>{item.name}</p>
-                  <p className="text-xs" style={{ color: styles.mutedColor }}>{item.role}</p>
+                  <p className="text-sm font-bold" style={{ color: styles.headingColor, ...fontStyle }}>{item.name}</p>
+                  <p className="text-xs" style={{ color: styles.mutedColor, ...bodyFontStyle }}>{item.role}</p>
                 </div>
               </div>
             </div>

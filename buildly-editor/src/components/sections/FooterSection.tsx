@@ -11,14 +11,21 @@ export const FooterSection: React.FC<Props> = ({ section, pages = [] }) => {
   const cs = getContentStyle(styles);
   const pageLinks = pages.map(p => ({ label: p.name, href: p.path }));
 
+  const fontStyle: React.CSSProperties = {
+    fontFamily: styles.headingFont ? `"${styles.headingFont}", 'Inter', Syne, sans-serif` : 'Syne, sans-serif',
+  };
+  const bodyFontStyle: React.CSSProperties = {
+    fontFamily: styles.bodyFont ? `"${styles.bodyFont}", 'Inter', DM Sans, sans-serif` : 'DM Sans, sans-serif',
+  };
+
   if (variant === 1) return (
     <footer style={{ ...bgStyle, position: 'relative' }} className="w-full pt-20 pb-10">
       {overlay && <div style={overlay} />}
       <div className="max-w-6xl mx-auto px-6" style={cs}>
         <div className="grid grid-cols-2 md:grid-cols-4 gap-10 mb-16">
           <div className="col-span-2 md:col-span-1">
-            <p className="font-black text-xl mb-3" style={{ color: styles.headingColor, fontFamily: 'Syne, sans-serif' }}>{c.brand}</p>
-            <p className="text-sm leading-relaxed mb-6" style={{ color: styles.textColor }}>{c.tagline}</p>
+            <p className="font-black text-xl mb-3" style={{ color: styles.headingColor, ...fontStyle }}>{c.brand}</p>
+            <p className="text-sm leading-relaxed mb-6" style={{ color: styles.textColor, ...bodyFontStyle }}>{c.tagline}</p>
             {c.email && <a href={`mailto:${c.email}`} className="text-xs block mb-1 hover:opacity-70 transition-opacity" style={{ color: styles.textColor }}>{c.email}</a>}
             {c.phone && <a href={`tel:${c.phone}`} className="text-xs hover:opacity-70 transition-opacity" style={{ color: styles.textColor }}>{c.phone}</a>}
           </div>

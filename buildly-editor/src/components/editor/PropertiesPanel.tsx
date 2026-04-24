@@ -81,9 +81,8 @@ const LocalImageUpload: React.FC<{ onUrl: (url: string) => void }> = ({ onUrl })
 
 const FontSelect: React.FC<{ label: string; value: string; onChange: (v: string) => void }> = ({ label, value, onChange }) => (
   <Field label={label}>
-    <select value={value || ''} onChange={e => onChange(e.target.value)}
-      className="w-full bg-surface border border-border rounded-lg px-2.5 py-1.5 text-xs text-text outline-none focus:border-accent/60"
-      style={{ fontFamily: value || 'inherit' }}>
+    <select value={value} onChange={e => onChange(e.target.value)}
+      className="w-full bg-surface border border-border rounded-lg px-2.5 py-1.5 text-xs text-text outline-none focus:border-accent/60">
       <option value="">Default</option>
       {GOOGLE_FONTS.map(f => (
         <option key={f.value} value={f.value}>{f.label}</option>
@@ -95,7 +94,16 @@ const FontSelect: React.FC<{ label: string; value: string; onChange: (v: string)
 const LINK_HINT = '#section  or  /page  or  https://...';
 
 export const PropertiesPanel: React.FC = () => {
-  const { selectedSection, updateSectionContent, updateSectionStyle, updateSectionItem, addSectionItem, removeSectionItem, changeVariant } = useSiteStore();
+  const {
+    selectedSection,
+    updateSectionContent,
+    updateSectionStyle,
+    updateSection,
+    updateSectionItem,
+    addSectionItem,
+    removeSectionItem,
+    changeVariant
+  } = useSiteStore();
   const section = selectedSection();
 
   if (!section) {
@@ -132,17 +140,18 @@ export const PropertiesPanel: React.FC = () => {
         {variants.length > 1 && (
           <Accordion title="Design Variant">
             <div className="flex flex-col gap-2">
-              {variants.map(v => (
-                <button key={v.id} onClick={() => changeVariant(section.id, section.type as SectionType, v.id)}
-                  className={clsx('flex items-center gap-2 px-3 py-2 rounded-lg border text-xs font-medium transition-all text-left',
-                    section.variant === v.id ? 'border-accent text-accent bg-accent/10' : 'border-border text-muted hover:border-zinc-600 hover:text-text-dim')}>
-                  <div className={clsx('w-2 h-2 rounded-full flex-shrink-0', section.variant === v.id ? 'bg-accent' : 'bg-border')} />
-                  {v.label}
-                </button>
-              ))}
-            </div>
-          </Accordion>
+{variants.map(v => (
+                 <button key={v.id} onClick={() => changeVariant(section.id, section.type, v.id)}
+                   className={clsx('flex items-center gap-2 px-3 py-2 rounded-lg border text-xs font-medium transition-all text-left',
+                     section.variant === v.id ? 'border-accent text-accent bg-accent/10' : 'border-border text-muted hover:border-zinc-600 hover:text-text-dim')}>
+                   <div className={clsx('w-2 h-2 rounded-full flex-shrink-0', section.variant === v.id ? 'bg-accent' : 'bg-border')} />
+                   {v.label}
+                 </button>
+               ))}
+             </div>
+           </Accordion>
         )}
+
 
         {/* Colors & Background */}
         <Accordion title="Colors & Background">
@@ -179,7 +188,7 @@ export const PropertiesPanel: React.FC = () => {
                   ))}
                 </select>
               </Field>
-            </>
+            </> 
           )}
           <ColorPicker label="Text Color" value={s.textColor} onChange={v => upS('textColor', v)} />
           <ColorPicker label="Heading Color" value={s.headingColor || s.textColor} onChange={v => upS('headingColor', v)} />
@@ -200,6 +209,24 @@ export const PropertiesPanel: React.FC = () => {
         {section.type === 'navbar' && (
           <Accordion title="Navigation">
             <Field label="Brand Name"><TI value={c.brand || ''} onChange={v => upC('brand', v)} placeholder="MyBrand" /></Field>
+            <Field label="Logo">
+              <LocalImageUpload onUrl={v => upC('logo', v)} />
+              <TI value={c.logo || ''} onChange={v => upC('logo', v)} placeholder="https://..." />
+              {c.logo && (
+                <>
+                  <img src={c.logo} alt="Logo" className="w-full h-14 object-contain rounded-lg border border-border mt-1" />
+                  <button onClick={() => upC('logo', '')} className="text-xs text-red-400 hover:text-red-300 mt-0.5">✕ Remove logo</button>
+                </>
+              )}
+            </Field>
+            <Field label="Logo Mode">
+              <select value={c.logoMode || 'both'} onChange={e => upC('logoMode', e.target.value)}
+                className="w-full bg-surface border border-border rounded-lg px-2.5 py-1.5 text-xs text-text outline-none focus:border-accent/60">
+                <option value="both">Logo + Text</option>
+                <option value="logo">Logo Only</option>
+                <option value="text">Text Only</option>
+              </select>
+            </Field>
             <Field label="CTA Button Text"><TI value={c.ctaText || ''} onChange={v => upC('ctaText', v)} placeholder="Get Started" /></Field>
             <Field label="CTA Link"><TI value={c.ctaLink || ''} onChange={v => upC('ctaLink', v)} placeholder={LINK_HINT} /></Field>
             <div>
@@ -207,15 +234,15 @@ export const PropertiesPanel: React.FC = () => {
               <p className="text-xs text-muted mb-2">Use <code className="text-accent/80">#about</code> to scroll to a section, or <code className="text-accent/80">/contact</code> to open a page.</p>
               {(section.navLinks || []).map((link, i) => (
                 <div key={i} className="flex gap-1 mb-1.5">
-                  <input value={link.label} onChange={e => { const nl = [...(section.navLinks||[])]; nl[i] = {...nl[i], label: e.target.value}; useSiteStore.getState().updateSection(section.id, { navLinks: nl }); }}
+                  <input value={link.label} onChange={e => updateSection(section.id, { navLinks: (section.navLinks||[]).map((l, j) => j === i ? {...l, label: e.target.value} : l ) })}
                     className="flex-1 bg-surface border border-border rounded px-2 py-1 text-xs text-text outline-none" placeholder="Label" />
-                  <input value={link.href} onChange={e => { const nl = [...(section.navLinks||[])]; nl[i] = {...nl[i], href: e.target.value}; useSiteStore.getState().updateSection(section.id, { navLinks: nl }); }}
+                  <input value={link.href} onChange={e => updateSection(section.id, { navLinks: (section.navLinks||[]).map((l, j) => j === i ? {...l, href: e.target.value} : l ) })}
                     className="flex-1 bg-surface border border-border rounded px-2 py-1 text-xs text-text outline-none font-mono" placeholder="#section or /page" />
-                  <button onClick={() => { const nl = (section.navLinks||[]).filter((_, j) => j !== i); useSiteStore.getState().updateSection(section.id, { navLinks: nl }); }}
+                  <button onClick={() => updateSection(section.id, { navLinks: (section.navLinks||[]).filter((_, j) => j !== i) })}
                     className="text-red-400 hover:text-red-300 px-1"><Trash2 size={11} /></button>
                 </div>
               ))}
-              <button onClick={() => useSiteStore.getState().updateSection(section.id, { navLinks: [...(section.navLinks||[]), { label: 'New Link', href: '#' }] })}
+              <button onClick={() => updateSection(section.id, { navLinks: [...(section.navLinks||[]), { label: 'New Link', href: '#' }] })}
                 className="flex items-center gap-1 text-xs text-accent hover:text-accent-dim mt-1"><Plus size={11} /> Add nav link</button>
             </div>
           </Accordion>
@@ -365,7 +392,9 @@ export const PropertiesPanel: React.FC = () => {
             <Field label="Copyright"><TI value={c.copyright||''} onChange={v=>upC('copyright',v)} /></Field>
           </Accordion>
           <Accordion title="Link Groups">
-            {(section.items||[]).map((group,i)=>(
+            {(section.items||[]).map((group) => (
+
+
               <div key={group.id} className="border border-border rounded-lg p-3 mb-2">
                 <div className="flex items-center justify-between mb-2">
                   <input value={group.group||''} onChange={e=>updateSectionItem(section.id,group.id,{group:e.target.value})}
@@ -374,14 +403,16 @@ export const PropertiesPanel: React.FC = () => {
                 </div>
                 {(group.links||[]).map((link,j)=>(
                   <div key={j} className="flex gap-1 mb-1">
-                    <input value={link.label} onChange={e=>{const it=JSON.parse(JSON.stringify(section.items||[]));it[i].links[j].label=e.target.value;useSiteStore.getState().updateSection(section.id,{items:it});}}
+                    <input value={link.label} onChange={e=>updateSectionItem(section.id, group.id, {links: (group.links||[]).map((l, k) => k === j ? {...l, label: e.target.value} : l)})}
                       className="flex-1 bg-surface border border-border rounded px-2 py-1 text-xs text-text outline-none" placeholder="Label" />
-                    <input value={link.href} onChange={e=>{const it=JSON.parse(JSON.stringify(section.items||[]));it[i].links[j].href=e.target.value;useSiteStore.getState().updateSection(section.id,{items:it});}}
+                    <input value={link.href} onChange={e=>updateSectionItem(section.id, group.id, {links: (group.links||[]).map((l, k) => k === j ? {...l, href: e.target.value} : l)})}
                       className="flex-1 bg-surface border border-border rounded px-2 py-1 text-xs text-text outline-none font-mono" placeholder="#section or /page" />
                   </div>
                 ))}
-                <button onClick={()=>{const it=JSON.parse(JSON.stringify(section.items||[]));it[i].links=[...(it[i].links||[]),{label:'Link',href:'#'}];useSiteStore.getState().updateSection(section.id,{items:it});}}
-                  className="text-xs text-accent mt-1 flex items-center gap-1"><Plus size={10}/>Add link</button>
+                <button onClick={()=>{
+                  const newLinks = [...(group.links||[]), { label: 'Link', href: '#' }];
+                  updateSectionItem(section.id, group.id, {links: newLinks});
+                }} className="text-xs text-accent mt-1 flex items-center gap-1"><Plus size={10}/>Add link</button>
               </div>
             ))}
             <button onClick={()=>addSectionItem(section.id)} className="flex items-center gap-1 text-xs text-accent mt-1"><Plus size={11}/>Add group</button>
@@ -404,3 +435,4 @@ export const PropertiesPanel: React.FC = () => {
     </aside>
   );
 };
+

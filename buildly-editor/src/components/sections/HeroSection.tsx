@@ -11,13 +11,20 @@ export const HeroSection: React.FC<Props> = ({ section }) => {
   const contentStyle = getContentStyle(styles);
   const inlineOverlayOpacity = parseFloat(c.overlayOpacity || '0.5');
 
+  const fontStyle: React.CSSProperties = {
+    fontFamily: styles.headingFont ? `"${styles.headingFont}", 'Inter', Syne, sans-serif` : 'Syne, sans-serif',
+  };
+  const bodyFontStyle: React.CSSProperties = {
+    fontFamily: styles.bodyFont ? `"${styles.bodyFont}", 'Inter', DM Sans, sans-serif` : 'DM Sans, sans-serif',
+  };
+
   if (variant === 1) return (
     <section id="hero" style={{ ...bgStyle, position: 'relative' }} className="w-full min-h-[90vh] flex items-center">
       {overlay && <div style={overlay} />}
       <div className="max-w-4xl mx-auto px-6 py-24 text-center w-full" style={contentStyle}>
         {c.badge && <div className="inline-flex items-center gap-2 px-4 py-1.5 rounded-full text-xs font-semibold mb-6 border" style={{ color: styles.accentColor, borderColor: `${styles.accentColor}40`, background: `${styles.accentColor}10` }}>{c.badge}</div>}
-        <h1 className="text-5xl md:text-7xl font-black leading-[1.05] tracking-tight mb-6" style={{ color: styles.headingColor, fontFamily: 'Syne, sans-serif' }}>{c.heading}</h1>
-        <p className="text-lg md:text-xl max-w-2xl mx-auto mb-10 leading-relaxed" style={{ color: styles.mutedColor }}>{c.subheading}</p>
+        <h1 className="text-5xl md:text-7xl font-black leading-[1.05] tracking-tight mb-6" style={{ color: styles.headingColor, ...fontStyle }}>{c.heading}</h1>
+        <p className="text-lg md:text-xl max-w-2xl mx-auto mb-10 leading-relaxed" style={{ color: styles.mutedColor, ...bodyFontStyle }}>{c.subheading}</p>
         <div className="flex flex-wrap items-center justify-center gap-4">
           {c.ctaText && <a href={c.ctaLink || '#'} className="px-8 py-4 rounded-xl text-base font-bold shadow-lg transition-all hover:scale-105 hover:shadow-xl" style={{ background: styles.headingColor, color: styles.bg }}>{c.ctaText}</a>}
           {c.cta2Text && <a href={c.cta2Link || '#'} className="px-8 py-4 rounded-xl text-base font-semibold border transition-all hover:scale-105" style={{ borderColor: styles.borderColor, color: styles.textColor }}>{c.cta2Text} →</a>}
@@ -33,8 +40,8 @@ export const HeroSection: React.FC<Props> = ({ section }) => {
       <div className="max-w-6xl mx-auto px-6 py-20 grid md:grid-cols-2 gap-16 items-center w-full" style={contentStyle}>
         <div>
           {c.badge && <div className="inline-block px-3 py-1 rounded-full text-xs font-bold tracking-widest uppercase mb-6" style={{ background: `${styles.accentColor}15`, color: styles.accentColor }}>{c.badge}</div>}
-          <h1 className="text-4xl md:text-6xl font-black leading-[1.1] tracking-tight mb-6" style={{ color: styles.headingColor, fontFamily: 'Syne, sans-serif' }}>{c.heading}</h1>
-          <p className="text-base md:text-lg mb-10 leading-relaxed" style={{ color: styles.mutedColor }}>{c.subheading}</p>
+          <h1 className="text-4xl md:text-6xl font-black leading-[1.1] tracking-tight mb-6" style={{ color: styles.headingColor, ...fontStyle }}>{c.heading}</h1>
+          <p className="text-base md:text-lg mb-10 leading-relaxed" style={{ color: styles.mutedColor, ...bodyFontStyle }}>{c.subheading}</p>
           <div className="flex flex-wrap gap-4">
             {c.ctaText && <a href={c.ctaLink || '#'} className="px-7 py-3.5 rounded-xl text-sm font-bold transition-all hover:scale-105" style={{ background: styles.accentColor, color: styles.bg }}>{c.ctaText}</a>}
             {c.cta2Text && <a href={c.cta2Link || '#'} className="px-7 py-3.5 rounded-xl text-sm font-semibold border transition-all" style={{ borderColor: styles.borderColor, color: styles.textColor }}>{c.cta2Text}</a>}
@@ -54,8 +61,8 @@ export const HeroSection: React.FC<Props> = ({ section }) => {
       </div>
       <div className="relative max-w-5xl mx-auto px-6 py-28 text-center w-full" style={contentStyle}>
         {c.badge && <div className="inline-block px-3 py-1 rounded-full text-xs font-bold tracking-widest uppercase mb-8 border" style={{ borderColor: `${styles.accentColor}50`, color: styles.accentColor }}>{c.badge}</div>}
-        <h1 className="text-5xl md:text-8xl font-black leading-[1.02] tracking-tighter mb-8" style={{ color: styles.headingColor, fontFamily: 'Syne, sans-serif' }}>{c.heading}</h1>
-        <p className="text-lg md:text-xl max-w-2xl mx-auto mb-12 leading-relaxed" style={{ color: styles.mutedColor }}>{c.subheading}</p>
+        <h1 className="text-5xl md:text-8xl font-black leading-[1.02] tracking-tighter mb-8" style={{ color: styles.headingColor, ...fontStyle }}>{c.heading}</h1>
+        <p className="text-lg md:text-xl max-w-2xl mx-auto mb-12 leading-relaxed" style={{ color: styles.mutedColor, ...bodyFontStyle }}>{c.subheading}</p>
         <div className="flex flex-wrap items-center justify-center gap-4">
           {c.ctaText && <a href={c.ctaLink || '#'} className="inline-flex px-10 py-4 rounded-xl text-base font-bold transition-all hover:scale-105" style={{ background: styles.accentColor, color: '#000000' }}>{c.ctaText}</a>}
           {c.cta2Text && <a href={c.cta2Link || '#'} className="px-8 py-4 rounded-xl text-base font-semibold border border-white/30 text-white transition-all hover:bg-white/10">{c.cta2Text}</a>}
@@ -74,8 +81,8 @@ export const HeroSection: React.FC<Props> = ({ section }) => {
       <div className="absolute inset-0" style={{ background: `rgba(0,0,0,${inlineOverlayOpacity})` }} />
       <div className="relative max-w-4xl mx-auto px-6 py-28 text-center w-full" style={{ zIndex: 1 }}>
         {c.badge && <div className="inline-block px-4 py-1.5 rounded-full text-xs font-bold tracking-widest uppercase mb-8 border border-white/30 text-white/80">{c.badge}</div>}
-        <h1 className="text-5xl md:text-8xl font-black leading-[1.02] tracking-tight mb-6 text-white" style={{ fontFamily: 'Syne, sans-serif', textShadow: '0 2px 40px rgba(0,0,0,0.5)' }}>{c.heading}</h1>
-        <p className="text-xl max-w-2xl mx-auto mb-12 text-white/80 leading-relaxed">{c.subheading}</p>
+        <h1 className="text-5xl md:text-8xl font-black leading-[1.02] tracking-tight mb-6 text-white" style={{ ...fontStyle, textShadow: '0 2px 40px rgba(0,0,0,0.5)' }}>{c.heading}</h1>
+        <p className="text-xl max-w-2xl mx-auto mb-12 text-white/80 leading-relaxed" style={{ ...bodyFontStyle }}>{c.subheading}</p>
         <div className="flex flex-wrap items-center justify-center gap-4">
           {c.ctaText && <a href={c.ctaLink || '#'} className="px-8 py-4 rounded-xl text-base font-bold shadow-2xl transition-all hover:scale-105" style={{ background: styles.accentColor, color: '#000000' }}>{c.ctaText}</a>}
           {c.cta2Text && <a href={c.cta2Link || '#'} className="px-8 py-4 rounded-xl text-base font-semibold border border-white/40 text-white transition-all hover:bg-white/10">{c.cta2Text}</a>}

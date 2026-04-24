@@ -131,9 +131,17 @@ export const Canvas: React.FC = () => {
   const store = useSiteStore();
   const { site, selectSection, previewMode, mobilePreview, addSection } = store;
   const activePage = store.activePage;
-  const page = activePage();
+  const currentPage = activePage();
 
-  if (!site || !page) {
+  if (!site) {
+    return (
+      <div className="flex-1 canvas-grid flex items-center justify-center">
+        <p className="text-muted text-sm">Loading…</p>
+      </div>
+    );
+  }
+
+  if (!currentPage) {
     return (
       <div className="flex-1 canvas-grid flex items-center justify-center">
         <p className="text-muted text-sm">Loading…</p>
@@ -152,7 +160,7 @@ export const Canvas: React.FC = () => {
         <div style={containerStyle}>
           {/* White site background */}
           <div style={{ background: '#ffffff', minHeight: '100vh' }} onClick={(e) => e.stopPropagation()}>
-            {(page.sections ?? []).length === 0 ? (
+            {(currentPage.sections ?? []).length === 0 ? (
               <div className="flex flex-col items-center justify-center min-h-screen gap-6 p-12">
                 <div className="text-center max-w-sm">
                   <div className="text-4xl mb-4">🎨</div>
@@ -170,11 +178,11 @@ export const Canvas: React.FC = () => {
               </div>
             ) : (
               <>
-                {(page.sections ?? []).map((section, idx) => (
+                {(currentPage.sections ?? []).map((section: Section, idx: number) => (
                   previewMode ? (
                     <SectionRenderer key={section.id} section={section} pages={site.pages} preview siteSlug={site.slug} />
                   ) : (
-                    <SectionBlock key={section.id} section={section} index={idx} total={(page.sections ?? []).length} />
+                    <SectionBlock key={section.id} section={section} index={idx} total={(currentPage.sections ?? []).length} />
                   )
                 ))}
               </>

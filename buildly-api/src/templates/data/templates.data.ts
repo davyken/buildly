@@ -165,4 +165,3 @@ export const DEFAULT_TEMPLATES = [
     meta: { title: 'Blank', description: '', language: 'en' }
   }
 ];
-

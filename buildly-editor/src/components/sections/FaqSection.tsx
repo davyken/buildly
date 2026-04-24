@@ -11,14 +11,21 @@ export const FaqSection: React.FC<Props> = ({ section }) => {
   const cs = getContentStyle(styles);
   const [openId, setOpenId] = useState<string | null>(null);
 
+  const fontStyle: React.CSSProperties = {
+    fontFamily: styles.headingFont ? `"${styles.headingFont}", 'Inter', Syne, sans-serif` : 'Syne, sans-serif',
+  };
+  const bodyFontStyle: React.CSSProperties = {
+    fontFamily: styles.bodyFont ? `"${styles.bodyFont}", 'Inter', DM Sans, sans-serif` : 'DM Sans, sans-serif',
+  };
+
   if (variant === 1) return (
     <section id="faq" style={{ ...bgStyle, position: 'relative' }} className="w-full py-24 md:py-32">
       {overlay && <div style={overlay} />}
       <div className="max-w-3xl mx-auto px-6" style={cs}>
         <div className="text-center mb-14">
           {c.badge && <div className="inline-block px-3 py-1 rounded-full text-xs font-bold tracking-widest uppercase mb-5 border" style={{ borderColor: `${styles.accentColor}40`, color: styles.accentColor, background: `${styles.accentColor}10` }}>{c.badge}</div>}
-          <h2 className="text-3xl md:text-5xl font-black mb-4" style={{ color: styles.headingColor, fontFamily: 'Syne, sans-serif' }}>{c.heading}</h2>
-          {c.subheading && <p className="text-base" style={{ color: styles.mutedColor }}>{c.subheading}</p>}
+          <h2 className="text-3xl md:text-5xl font-black mb-4" style={{ color: styles.headingColor, ...fontStyle }}>{c.heading}</h2>
+          {c.subheading && <p className="text-base" style={{ color: styles.mutedColor, ...bodyFontStyle }}>{c.subheading}</p>}
         </div>
         <div className="flex flex-col gap-3">
           {items.map(item => (
@@ -27,7 +34,7 @@ export const FaqSection: React.FC<Props> = ({ section }) => {
                 <span className="font-semibold text-sm md:text-base pr-4" style={{ color: styles.headingColor }}>{item.question}</span>
                 <span className="flex-shrink-0 w-6 h-6 rounded-full flex items-center justify-center transition-transform text-xs font-bold" style={{ background: `${styles.accentColor}20`, color: styles.accentColor, transform: openId === item.id ? 'rotate(45deg)' : 'none' }}>+</span>
               </button>
-              {openId === item.id && <div className="px-6 pb-5"><p className="text-sm leading-relaxed" style={{ color: styles.mutedColor }}>{item.answer}</p></div>}
+              <div className="px-6 pb-5"><p className="text-sm leading-relaxed" style={{ color: styles.mutedColor, ...bodyFontStyle }}>{item.answer}</p></div>
             </div>
           ))}
         </div>
@@ -50,8 +57,8 @@ export const FaqSection: React.FC<Props> = ({ section }) => {
               {col.map(item => (
                 <div key={item.id} className="p-6 rounded-2xl border" style={{ background: styles.cardBg, borderColor: styles.borderColor }}>
                   <div className="flex gap-3 mb-3">
-                    <span className="text-base font-black" style={{ color: styles.accentColor, fontFamily: 'Syne, sans-serif' }}>Q.</span>
-                    <p className="font-semibold text-sm" style={{ color: styles.headingColor }}>{item.question}</p>
+                    <span className="text-base font-black" style={{ color: styles.accentColor, ...fontStyle }}>Q.</span>
+                    <p className="font-semibold text-sm" style={{ color: styles.headingColor, ...fontStyle }}>{item.question}</p>
                   </div>
                   <p className="text-sm leading-relaxed pl-6" style={{ color: styles.mutedColor }}>{item.answer}</p>
                 </div>

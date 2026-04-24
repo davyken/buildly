@@ -5,6 +5,7 @@ import toast from 'react-hot-toast';
 import {
   ArrowLeft, Monitor, Smartphone, EyeOff, Globe,
   Save, CheckCircle2, Loader2, Layers, WifiOff, Undo2, Redo2,
+  Pencil,
 } from 'lucide-react';
 import { sitesApi, publishApi } from '../lib/api';
 import { useSiteStore } from '../stores/siteStore';
@@ -62,8 +63,10 @@ export const EditorPage: React.FC = () => {
   const {
     site, isDirty, isSaving, setIsSaving, setIsDirty, setSite,
     previewMode, setPreviewMode, mobilePreview, setMobilePreview,
-    undo, redo, canUndo, canRedo,
+    undo, redo, canUndo, canRedo, updateSiteName,
   } = useSiteStore();
+  const [editingName, setEditingName] = React.useState(false);
+  const [tempName, setTempName] = React.useState('');
   const saveTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
   // Fetch — staleTime:0 ensures fresh data when navigating back
@@ -126,7 +129,15 @@ export const EditorPage: React.FC = () => {
           clearInterval(poll); toast.dismiss(tid);
           const { data: info } = await publishApi.info(site._id);
           setSite({ ...site, status: 'published', publishedAt: info.data.publishedAt });
-          toast.success(`🚀 Live! ${info.data.publicUrl}`, { duration: 8000 });
+          const dns = info.data.dnsRecord;
+          if (dns) {
+            toast.success(
+              <>🚀 Live! <a href={info.data.publicUrl} target="_blank" rel="noopener noreferrer" className="underline">{info.data.publicUrl}</a><br/>Add a CNAME record at your domain registrar:<br/><code className="text-accent">{dns.host}</code> → <code className="text-accent">{dns.value}</code></>,
+              { duration: 10000 }
+            );
+          } else {
+            toast.success(`🚀 Live! ${info.data.publicUrl}`, { duration: 8000 });
+          }
         } else if (job.data.state === 'failed') {
           clearInterval(poll); toast.dismiss(tid); toast.error('Publish failed');
         }
@@ -156,7 +167,28 @@ export const EditorPage: React.FC = () => {
         <Tooltip label="Dashboard"><Button variant="ghost" size="sm" icon={<ArrowLeft size={14} />} onClick={() => navigate('/dashboard')} /></Tooltip>
         <div className="w-px h-5 bg-border mx-1" />
         <div className="flex items-center gap-2 min-w-0">
-          <span className="font-display font-semibold text-sm text-text truncate max-w-[160px]">{site.name}</span>
+          {editingName ? (
+            <input
+              autoFocus
+              value={tempName}
+              onChange={(e) => setTempName(e.target.value)}
+              onKeyDown={(e) => {
+                if (e.key === 'Enter') { updateSiteName(tempName.trim() || site.name); setEditingName(false); }
+                if (e.key === 'Escape') { setEditingName(false); }
+              }}
+              onBlur={() => { updateSiteName(tempName.trim() || site.name); setEditingName(false); }}
+              className="bg-surface border border-accent/50 rounded px-2 py-0.5 text-sm text-text outline-none w-48"
+            />
+          ) : (
+            <button
+              onClick={() => { setTempName(site.name); setEditingName(true); }}
+              className="flex items-center gap-1 group"
+              title="Click to rename site"
+            >
+              <span className="font-display font-semibold text-sm text-text truncate max-w-[160px]">{site.name}</span>
+              <Pencil size={12} className="text-muted opacity-0 group-hover:opacity-100 transition-opacity" />
+            </button>
+          )}
           <Badge variant={site.status === 'published' ? 'green' : 'default'}>{site.status === 'published' ? '● Live' : '○ Draft'}</Badge>
         </div>
         <div className="text-xs ml-2 flex items-center gap-1.5">

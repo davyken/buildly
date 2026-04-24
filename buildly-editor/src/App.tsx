@@ -7,6 +7,13 @@ import { LoginPage, RegisterPage } from './pages/AuthPages';
 import { DashboardPage } from './pages/DashboardPage';
 import { EditorPage } from './pages/EditorPage';
 import { PublishedSitePage } from './pages/PublishedSitePage';
+import { InsightsPage } from './pages/InsightsPage';
+import { TemplatesPage } from './pages/TemplatesPage';
+import { PublishedSitesPage } from './pages/PublishedSitesPage';
+import { DraftsPage } from './pages/DraftsPage';
+import { ProfilePage } from './pages/ProfilePage';
+import { DashboardLayout } from './layouts/DashboardLayout';
+import { LandingPage } from './pages/LandingPage';
 
 const qc = new QueryClient({ defaultOptions: { queries: { retry: 1, staleTime: 30_000 }, mutations: { retry: 0 } } });
 
@@ -25,14 +32,24 @@ export default function App() {
     <QueryClientProvider client={qc}>
       <BrowserRouter>
         <Routes>
-          <Route path="/" element={<Navigate to="/dashboard" replace />} />
+          <Route path="/" element={<LandingPage />} />
           <Route path="/login" element={<Public><LoginPage /></Public>} />
           <Route path="/register" element={<Public><RegisterPage /></Public>} />
-          <Route path="/dashboard" element={<Private><DashboardPage /></Private>} />
+          <Route 
+            path="/dashboard" 
+            element={<Private><DashboardLayout /></Private>} 
+          >
+            <Route index element={<DashboardPage />} />
+            <Route path="insights" element={<InsightsPage />} />
+            <Route path="templates" element={<TemplatesPage />} />
+            <Route path="published" element={<PublishedSitesPage />} />
+            <Route path="drafts" element={<DraftsPage />} />
+            <Route path="profile" element={<ProfilePage />} />
+          </Route>
           <Route path="/editor/:id" element={<Private><EditorPage /></Private>} />
           {/* Public site renderer */}
           <Route path="/s/:slug" element={<PublishedSitePage />} />
-          <Route path="*" element={<Navigate to="/dashboard" replace />} />
+          <Route path="*" element={<Navigate to="/" replace />} />
         </Routes>
       </BrowserRouter>
       <Toaster position="bottom-right" toastOptions={{
