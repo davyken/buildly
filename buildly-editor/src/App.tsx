@@ -13,6 +13,7 @@ import { PublishedSitesPage } from './pages/PublishedSitesPage';
 import { DraftsPage } from './pages/DraftsPage';
 import { ProfilePage } from './pages/ProfilePage';
 import { DashboardLayout } from './layouts/DashboardLayout';
+import { LandingPage } from './pages/LandingPage';
 
 const qc = new QueryClient({ defaultOptions: { queries: { retry: 1, staleTime: 30_000 }, mutations: { retry: 0 } } });
 
@@ -31,7 +32,7 @@ export default function App() {
     <QueryClientProvider client={qc}>
       <BrowserRouter>
         <Routes>
-          <Route path="/" element={<Navigate to="/dashboard" replace />} />
+          <Route path="/" element={<LandingPage />} />
           <Route path="/login" element={<Public><LoginPage /></Public>} />
           <Route path="/register" element={<Public><RegisterPage /></Public>} />
           <Route 
@@ -48,7 +49,7 @@ export default function App() {
           <Route path="/editor/:id" element={<Private><EditorPage /></Private>} />
           {/* Public site renderer */}
           <Route path="/s/:slug" element={<PublishedSitePage />} />
-          <Route path="*" element={<Navigate to="/dashboard" replace />} />
+          <Route path="*" element={<Navigate to="/" replace />} />
         </Routes>
       </BrowserRouter>
       <Toaster position="bottom-right" toastOptions={{

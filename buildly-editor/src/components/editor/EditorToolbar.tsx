@@ -59,10 +59,18 @@ export const EditorToolbar: React.FC = () => {
       const poll = setInterval(async () => {
         const { data: job } = await publishApi.jobStatus(jobId);
         if (job.data.state === 'completed') {
-          clearInterval(poll);
+           clearInterval(poll);
           const { data: info } = await publishApi.info(site._id!);
           setSite({ ...site, status: 'published', publishedAt: info.data.publishedAt });
-          toast.success(`Site is live! ${info.data.publicUrl}`, { duration: 5000 });
+          const dns = info.data.dnsRecord;
+          if (dns) {
+            toast.success(
+              <>Site is live! <a href={info.data.publicUrl} target="_blank" rel="noopener noreferrer" className="underline">{info.data.publicUrl}</a><br/>Add CNAME record: <code className="text-accent">{dns.host}</code> → <code className="text-accent">{dns.value}</code></>,
+              { duration: 10000 }
+            );
+          } else {
+            toast.success(`Site is live! ${info.data.publicUrl}`, { duration: 5000 });
+          }
         } else if (job.data.state === 'failed') {
           clearInterval(poll);
           toast.error('Publish failed. Try again.');

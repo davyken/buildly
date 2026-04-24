@@ -117,6 +117,20 @@ export const PublishedSitePage: React.FC = () => {
           />
         ))}
 
+         {/* DNS Record Info */}
+        {site.customDomain && site.pages?.length > 0 && (
+          <div className="mb-4 mx-4 mt-2 p-3 rounded-xl bg-amber-500/10 border border-amber-500/20">
+            <p className="text-xs font-bold text-amber-300 uppercase tracking-wider mb-2">DNS Configuration</p>
+            <p className="text-[11px] text-gray-300 mb-2">To use your custom domain, add this CNAME record at your domain registrar:</p>
+            <div className="flex items-center gap-2 text-xs font-mono">
+              <span className="px-2 py-1 rounded bg-black/30 text-amber-100">{site.customDomain}</span>
+              <span className="text-gray-500">→</span>
+              <span className="px-2 py-1 rounded bg-black/30 text-amber-100">sites.{window.location.hostname === 'localhost' ? 'yourapp.io' : window.location.hostname.replace(/^www\./, '').replace(/^render\./, '')}</span>
+            </div>
+            <p className="text-[10px] text-gray-500/60 mt-2">DNS changes can take up to 24 hours to propagate.</p>
+          </div>
+        )}
+
         {/* Buildly badge */}
         <div style={{ position: 'fixed', bottom: 16, right: 16, zIndex: 9999 }}>
           <a href="/" target="_blank" rel="noopener noreferrer"

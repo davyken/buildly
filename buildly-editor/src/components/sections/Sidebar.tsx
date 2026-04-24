@@ -135,7 +135,22 @@ const Sidebar: React.FC = () => {
           </div>
         </div>
 
-        <div className="mt-auto pt-4 px-3 pb-6 space-y-1">
+         {/* DNS Help Section */}
+         <div className="mb-2">
+           <div className="text-[10px] font-bold text-muted uppercase tracking-widest mb-2 px-1">DNS Setup</div>
+           <div className="px-3 py-2 rounded-xl bg-amber-500/5 border border-amber-500/10">
+             <p className="text-[10px] text-amber-300/70 font-medium mb-1">Custom Domain CNAME</p>
+             <p className="text-[9px] text-gray-500 leading-tight">
+               To connect a custom domain, add a CNAME record:<br/>
+               <code className="text-amber-200/80">your-domain.com</code><br/>
+               pointing to<br/>
+               <code className="text-amber-200/80">sites.{window.location.hostname === 'localhost' ? 'yourapp.io' : window.location.hostname.replace(/^www\./, '').replace(/^render\./, '')}</code><br/>
+               <span className="text-amber-500/50">(in your domain registrar's DNS settings)</span>
+             </p>
+           </div>
+         </div>
+
+         <div className="mt-auto pt-4 px-3 pb-6 space-y-1">
           <div className="text-[10px] font-bold text-muted uppercase tracking-widest mb-2 px-1">Account</div>
           {/* Profile/Settings */}
           <NavLink

@@ -81,6 +81,7 @@ export const PublishedSitesPage: React.FC = () => {
   const qc = useQueryClient();
   const [showCreate, setShowCreate] = useState(false);
   const [siteName, setSiteName] = useState('');
+  const appHost = window.location.hostname === 'localhost' ? 'yourapp.io' : window.location.hostname.replace(/^www\./, '').replace(/^render\./, '');
 
   const { data: sitesData, isLoading } = useQuery({
     queryKey: ['published-sites'],
@@ -112,8 +113,29 @@ export const PublishedSitesPage: React.FC = () => {
   const sites: Site[] = (sitesData || []).filter(site => site.status === 'published');
 
   return (
-    <div className="max-w-6xl mx-auto">
-      <div className="flex items-end justify-between mb-8">
+       <div className="max-w-6xl mx-auto">
+       {/* DNS Setup Guide */}
+       <div className="bg-amber-500/5 border border-amber-500/10 rounded-2xl p-4 mb-6">
+         <div className="flex items-start gap-3">
+           <div className="w-5 h-5 rounded-full bg-amber-500/20 flex items-center justify-center flex-shrink-0 mt-0.5">
+             <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" className="text-amber-400">
+               <path d="M12 2L2 7l10 5 10-5-10-5zM2 17l10 5 10-5M2 12l10 5 10-5" className="stroke-amber-400"/>
+             </svg>
+           </div>
+           <div className="flex-1">
+             <p className="text-amber-300 text-sm font-medium mb-1">DNS Record for Custom Domains</p>
+             <p className="text-[11px] text-gray-400 leading-relaxed">
+               To connect a custom domain to your published site, add a CNAME record at your domain registrar:
+               <span className="font-mono text-amber-200/80 block mt-1">your-domain.com</span>
+               <span className="text-gray-500">→</span>
+               <span className="font-mono text-amber-200/80">sites.{appHost}</span>
+             </p>
+             <p className="text-[10px] text-amber-500/50 mt-1.5">DNS changes can take up to 24 hours to propagate.</p>
+           </div>
+         </div>
+       </div>
+
+       <div className="flex items-end justify-between mb-8">
         <div>
           <h1 className="font-display text-3xl font-bold text-text">
             Published Sites

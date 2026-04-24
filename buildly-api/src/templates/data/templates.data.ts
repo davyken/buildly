@@ -165,5 +165,3 @@ export const DEFAULT_TEMPLATES = [
     meta: { title: 'Blank', description: '', language: 'en' }
   }
 ];
-
-              heading: 'Everything You Need to Succeed Online',

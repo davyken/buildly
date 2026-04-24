@@ -129,7 +129,15 @@ export const EditorPage: React.FC = () => {
           clearInterval(poll); toast.dismiss(tid);
           const { data: info } = await publishApi.info(site._id);
           setSite({ ...site, status: 'published', publishedAt: info.data.publishedAt });
-          toast.success(`🚀 Live! ${info.data.publicUrl}`, { duration: 8000 });
+          const dns = info.data.dnsRecord;
+          if (dns) {
+            toast.success(
+              <>🚀 Live! <a href={info.data.publicUrl} target="_blank" rel="noopener noreferrer" className="underline">{info.data.publicUrl}</a><br/>Add a CNAME record at your domain registrar:<br/><code className="text-accent">{dns.host}</code> → <code className="text-accent">{dns.value}</code></>,
+              { duration: 10000 }
+            );
+          } else {
+            toast.success(`🚀 Live! ${info.data.publicUrl}`, { duration: 8000 });
+          }
         } else if (job.data.state === 'failed') {
           clearInterval(poll); toast.dismiss(tid); toast.error('Publish failed');
         }
