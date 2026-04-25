@@ -49,28 +49,29 @@ export class PublishService {
     return { jobId, state: await job.getState(), progress: job.progress(), result: job.returnvalue, failReason: job.failedReason };
   }
 
-  async getSitePublishInfo(siteId: string, userId: string) {
-    const site = await this.siteModel.findById(siteId).select('status slug publishedAt customDomain userId');
-    if (!site) throw new NotFoundException('Site not found');
-    if (String(site.userId) !== userId) throw new ForbiddenException('Access denied');
-    const rendererUrl = process.env.RENDERER_URL ?? 'http://localhost:3001';
-    const appUrl = process.env.APP_URL ?? 'http://localhost:3000';
-    let appHost = 'yourapp.io';
-    try {
-      appHost = new URL(appUrl).hostname;
-    } catch {}
-    return {
-      status: site.status,
-      isPublished: site.status === SiteStatus.PUBLISHED,
-      publishedAt: site.publishedAt,
-      publicUrl: site.status === SiteStatus.PUBLISHED ? `${rendererUrl}/s/${site.slug}` : null,
-      customDomainUrl: site.customDomain ? `https://${site.customDomain}` : null,
-      dnsRecord: site.status === SiteStatus.PUBLISHED ? {
-        type: 'CNAME',
-        host: `sites.${appHost}`,
-        value: `sites.${appHost}`,
-        note: 'DNS changes can take up to 24 hours to propagate.',
-      } : null,
-    };
-  }
+   async getSitePublishInfo(siteId: string, userId: string) {
+     const site = await this.siteModel.findById(siteId).select('status slug publishedAt customDomain deployedUrl userId');
+     if (!site) throw new NotFoundException('Site not found');
+     if (String(site.userId) !== userId) throw new ForbiddenException('Access denied');
+     const rendererUrl = process.env.RENDERER_URL ?? 'http://localhost:3001';
+     const appUrl = process.env.APP_URL ?? 'http://localhost:3000';
+     let appHost = 'yourapp.io';
+     try {
+       appHost = new URL(appUrl).hostname;
+     } catch {}
+     return {
+       status: site.status,
+       isPublished: site.status === SiteStatus.PUBLISHED,
+       publishedAt: site.publishedAt,
+       deployedUrl: site.deployedUrl,
+       publicUrl: site.status === SiteStatus.PUBLISHED ? `${rendererUrl}/s/${site.slug}` : null,
+       customDomainUrl: site.customDomain ? `https://${site.customDomain}` : null,
+       dnsRecord: site.status === SiteStatus.PUBLISHED ? {
+         type: 'CNAME',
+         host: `sites.${appHost}`,
+         value: `sites.${appHost}`,
+         note: 'DNS changes can take up to 24 hours to propagate.',
+       } : null,
+     };
+   }
 }

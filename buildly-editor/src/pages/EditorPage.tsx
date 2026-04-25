@@ -127,8 +127,13 @@ export const EditorPage: React.FC = () => {
         const { data: job } = await publishApi.jobStatus(jobId);
         if (job.data.state === 'completed') {
           clearInterval(poll); toast.dismiss(tid);
-          const { data: info } = await publishApi.info(site._id);
-          setSite({ ...site, status: 'published', publishedAt: info.data.publishedAt });
+           const { data: info } = await publishApi.info(site._id);
+           setSite({ 
+             ...site, 
+             status: 'published', 
+             publishedAt: info.data.publishedAt,
+             deployedUrl: info.data.deployedUrl
+           });
           const dns = info.data.dnsRecord;
           if (dns) {
             toast.success(
@@ -233,14 +238,19 @@ export const EditorPage: React.FC = () => {
         {site.status === 'published' ? (
           <>
             <Button variant="ghost" size="sm" icon={<Globe size={14} />}
-              onClick={() => window.open(`${import.meta.env.VITE_RENDERER_URL || 'http://localhost:3001'}/s/${site.slug}`, '_blank')}>
+              onClick={() => {
+                const url = site.deployedUrl 
+                  ? `${site.deployedUrl}/s/${site.slug}` 
+                  : `${import.meta.env.VITE_RENDERER_URL || 'http://localhost:3001'}/s/${site.slug}`;
+                window.open(url, '_blank');
+              }}>
               View Live
             </Button>
             <Button variant="outline" size="sm" icon={<WifiOff size={14} />} onClick={handleUnpublish}>Unpublish</Button>
           </>
-        ) : (
-          <Button variant="accent" size="sm" icon={<Globe size={14} />} onClick={handlePublish}>Publish</Button>
-        )}
+) : (
+  <Button variant="accent" size="sm" icon={<Globe size={14} />} onClick={handlePublish}>Publish</Button>
+)}
       </header>
 
       <div className="flex flex-1 overflow-hidden">
