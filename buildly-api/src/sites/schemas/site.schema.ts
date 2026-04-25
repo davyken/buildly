@@ -118,6 +118,12 @@ export class Site {
   @Prop({ default: null })
   publishedSnapshot: string; // JSON string of pages at publish time (kept lean)
 
+  @Prop({ default: null })
+  deployedUrl: string; // Vercel deployment URL
+
+  @Prop({ default: null })
+  deploymentProvider: string; // 'vercel'
+
   @Prop({ default: '#ffffff' })
   globalBackground: string;
 

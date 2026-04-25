@@ -117,7 +117,26 @@ export const PublishedSitePage: React.FC = () => {
           />
         ))}
 
-         {/* DNS Record Info */}
+         {/* Deployment Info */}
+        {site.deployedUrl && site.pages?.length > 0 && (
+          <div className="mb-4 mx-4 mt-2 p-3 rounded-xl bg-blue-500/10 border border-blue-500/20">
+            <p className="text-xs font-bold text-blue-300 uppercase tracking-wider mb-2">Deployment URL</p>
+            <p className="text-[11px] text-gray-300 mb-2">Your site is deployed at:</p>
+            <div className="flex items-center gap-2 text-xs font-mono">
+              <span className="px-2 py-1 rounded bg-black/30 text-blue-100">{site.deployedUrl}</span>
+              <a 
+                href={site.deployedUrl} 
+                target="_blank" 
+                rel="noopener noreferrer"
+                className="ml-2 text-blue-400 hover:text-blue-300"
+              >
+                ↗
+              </a>
+            </div>
+          </div>
+        )}
+        
+        {/* DNS Record Info */}
         {site.customDomain && site.pages?.length > 0 && (
           <div className="mb-4 mx-4 mt-2 p-3 rounded-xl bg-amber-500/10 border border-amber-500/20">
             <p className="text-xs font-bold text-amber-300 uppercase tracking-wider mb-2">DNS Configuration</p>

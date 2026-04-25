@@ -80,6 +80,8 @@ export interface Site {
   publishedAt?: string;
   createdAt?: string;
   updatedAt?: string;
+  deployedUrl?: string | null;
+  deploymentProvider?: string | null;
 }
 
 export interface AuthUser {
