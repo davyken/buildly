@@ -120,18 +120,33 @@ export const PublishedSitePage: React.FC = () => {
          {/* Deployment Info */}
         {site.deployedUrl && site.pages?.length > 0 && (
           <div className="mb-4 mx-4 mt-2 p-3 rounded-xl bg-blue-500/10 border border-blue-500/20">
-            <p className="text-xs font-bold text-blue-300 uppercase tracking-wider mb-2">Deployment URL</p>
-            <p className="text-[11px] text-gray-300 mb-2">Your site is deployed at:</p>
-            <div className="flex items-center gap-2 text-xs font-mono">
-              <span className="px-2 py-1 rounded bg-black/30 text-blue-100">{site.deployedUrl}</span>
-              <a 
-                href={site.deployedUrl} 
-                target="_blank" 
-                rel="noopener noreferrer"
-                className="ml-2 text-blue-400 hover:text-blue-300"
-              >
-                ↗
-              </a>
+            <p className="text-xs font-bold text-blue-300 uppercase tracking-wider mb-2">Deployment Information</p>
+            <div className="space-y-2">
+              <div className="flex items-start">
+                <span className="flex-shrink-0 text-xs font-bold text-blue-300">URL:</span>
+                <span className="ml-2 flex-1 text-[11px] text-gray-300 break-all">
+                  <a 
+                    href={`${site.deployedUrl}/s/${site.slug}`} 
+                    target="_blank" 
+                    rel="noopener noreferrer"
+                    className="text-blue-400 hover:text-blue-300 underline"
+                  >
+                    {`${site.deployedUrl}/s/${site.slug}`}
+                  </a>
+                </span>
+              </div>
+              <div className="flex items-start">
+                <span className="flex-shrink-0 text-xs font-bold text-blue-300">Deployed:</span>
+                <span className="ml-2 flex-1 text-[11px] text-gray-300">
+                  {site.publishedAt ? new Date(site.publishedAt).toLocaleString() : 'Just now'}
+                </span>
+              </div>
+              <div className="flex items-start">
+                <span className="flex-shrink-0 text-xs font-bold text-blue-300">Provider:</span>
+                <span className="ml-2 flex-1 text-[11px] text-gray-300">
+                  {site.deploymentProvider || 'Vercel'}
+                </span>
+              </div>
             </div>
           </div>
         )}

@@ -59,15 +59,15 @@ export class SitesService {
     return site;
   }
 
-  async findPublic(slug: string): Promise<SiteDocument> {
-    const cacheKey = `site:public:${slug}`;
-    const cached = await this.cache.get<SiteDocument>(cacheKey);
-    if (cached) return cached;
-    const site = await this.siteModel.findOne({ slug, status: SiteStatus.PUBLISHED }).exec();
-    if (!site) throw new NotFoundException('Site not found or not published');
-    await this.cache.set(cacheKey, site, 120000);
-    return site;
-  }
+   async findPublic(slug: string): Promise<SiteDocument> {
+     const cacheKey = `site:public:${slug}`;
+     const cached = await this.cache.get<SiteDocument>(cacheKey);
+     if (cached) return cached;
+     const site = await this.siteModel.findOne({ slug, status: SiteStatus.PUBLISHED }).select('slug status publishedAt customDomain deployedUrl deploymentProvider pages meta name').exec();
+     if (!site) throw new NotFoundException('Site not found or not published');
+     await this.cache.set(cacheKey, site, 120000);
+     return site;
+   }
 
   async findByDomain(domain: string): Promise<SiteDocument | null> {
     const cacheKey = `domain:${domain}`;

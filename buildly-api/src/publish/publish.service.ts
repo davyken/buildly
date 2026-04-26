@@ -59,19 +59,19 @@ export class PublishService {
      try {
        appHost = new URL(appUrl).hostname;
      } catch {}
-     return {
-       status: site.status,
-       isPublished: site.status === SiteStatus.PUBLISHED,
-       publishedAt: site.publishedAt,
-       deployedUrl: site.deployedUrl,
-       publicUrl: site.status === SiteStatus.PUBLISHED ? `${rendererUrl}/s/${site.slug}` : null,
-       customDomainUrl: site.customDomain ? `https://${site.customDomain}` : null,
-       dnsRecord: site.status === SiteStatus.PUBLISHED ? {
-         type: 'CNAME',
-         host: `sites.${appHost}`,
-         value: `sites.${appHost}`,
-         note: 'DNS changes can take up to 24 hours to propagate.',
-       } : null,
-     };
+      return {
+        status: site.status,
+        isPublished: site.status === SiteStatus.PUBLISHED,
+        publishedAt: site.publishedAt,
+        deployedUrl: site.deployedUrl,
+        publicUrl: site.status === SiteStatus.PUBLISHED ? (site.deployedUrl ? `${site.deployedUrl}/s/${site.slug}` : `${rendererUrl}/s/${site.slug}`) : null,
+        customDomainUrl: site.customDomain ? `https://${site.customDomain}` : null,
+        dnsRecord: site.status === SiteStatus.PUBLISHED ? {
+          type: 'CNAME',
+          host: `sites.${appHost}`,
+          value: `sites.${appHost}`,
+          note: 'DNS changes can take up to 24 hours to propagate.',
+        } : null,
+      };
    }
 }
